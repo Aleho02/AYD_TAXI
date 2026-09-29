@@ -1,66 +1,133 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AYD TAXII 🚖
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Sistema de Información Geoespacial Distribuido** diseñado para optimizar, solicitar y gestionar el servicio de transporte público individual de taxis en tiempo real en la provincia del **Valle de Ubaté, Cundinamarca**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Descripción del Proyecto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+AYD TAXII conecta de forma transparente y eficiente a pasajeros y taxistas, reemplazando los métodos tradicionales de despacho (frecuencias de radio y llamadas telefónicas) por un canal digital con **geolocalización continua**, **estimación previa de tarifas** y **trazabilidad completa de las carreras**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👥 Roles del Sistema
 
-## Learning Laravel
+1. **Pasajero (Usuario cliente):**
+   * Solicita servicios de taxi en tiempo real con captura GPS.
+   * Consulta la estimación previa de la tarifa calculada según la distancia al destino.
+   * Visualiza información de seguridad del conductor (foto, nombre, teléfono y placa del vehículo).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+2. **Conductor:**
+   * Recibe, acepta y gestiona solicitudes de carreras asignadas.
+   * Transmite su posición geográfica en tiempo real mediante telemetría GPS.
+   * Consulta el desglose del valor estimado del servicio.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3. **Administrador / Operador (Panel Web CMS):**
+   * Control centralizado de la flota automotora y conductores autorizados.
+   * Carga, validación y gestión de documentos y fotografías de conductores (JPG, PNG, WEBP).
+   * Monitoreo transaccional de viajes y analítica de movilidad en el Valle de Ubaté.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠️ Tecnologías Utilizadas
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+* **Backend & API:** Laravel 11 (PHP 8.2) + Laravel Sanctum (Tokens Bearer)
+* **Base de Datos:** MySQL / MariaDB (XAMPP)
+* **Frontend CMS:** Blade Engine, Vanilla CSS responsivo, micro-animaciones y Google Fonts (Outfit & Inter)
+* **Pruebas y Auditoría:** Postman, Composer Audit, NPM Audit, Artisan CLI
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🚀 Instalación y Puesta en Marcha
 
-## Contributing
+### 1. Clonar el repositorio
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+git clone https://github.com/layton777/AYD.git
+cd AYD
+```
 
-## Code of Conduct
+### 2. Instalar dependencias
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+composer install
+npm install
+```
 
-## Security Vulnerabilities
+### 3. Configurar variables de entorno (`.env`)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Copia el archivo de ejemplo:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## License
+Asegúrate de configurar la conexión a **MySQL (XAMPP)** en tu `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ayd_taxi
+DB_USERNAME=root
+DB_PASSWORD=
+DB_COLLATION=utf8mb4_unicode_ci
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Crea el enlace simbólico para las imágenes de almacenamiento:
+```bash
+php artisan storage:link
+```
+
+### 4. Migrar y sembrar la base de datos
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### 5. Iniciar los servidores
+
+```bash
+# Terminal 1: Servidor Web / API de Laravel
+php artisan serve
+
+# Terminal 2: Vite para assets
+npm run dev
+```
+
+El aplicativo estará disponible en: **`http://127.0.0.1:8000`**
+
+---
+
+## 🔑 Usuarios de Prueba Sembrados
+
+| Rol | Correo Electrónico | Contraseña | Detalles |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@aydtaxi.com` | `password123` | Acceso completo al Panel CMS |
+| **Conductor** | `conductor@aydtaxi.com` | `password123` | Taxi Hyundai Accent `UBT345`, Lic: `LIC-UBATE-9988` |
+| **Pasajero** | `pasajero@aydtaxi.com` | `password123` | Cliente en Ubaté con historial de carreras |
+
+---
+
+## 🌐 Endpoints Principales de la API (Sanctum)
+
+URL Base: `http://127.0.0.1:8000/api`
+
+| Método | Endpoint | Cabeceras | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/register` | `Accept: application/json` | Registro de nuevo usuario (Pasajero / Conductor) |
+| `POST` | `/api/login` | `Accept: application/json` | Inicio de sesión y emisión de Bearer Token |
+| `GET` | `/api/profile` | `Authorization: Bearer <TOKEN>` | Perfil del usuario autenticado |
+| `POST` | `/api/logout` | `Authorization: Bearer <TOKEN>` | Revocación de token y cierre de sesión |
+| `GET` | `/api/trips` | `Authorization: Bearer <TOKEN>` | Listado de viajes según rol |
+| `POST` | `/api/trips` | `Authorization: Bearer <TOKEN>` | Pasajero solicita viaje con cálculo tarifario GPS |
+| `GET` | `/api/trips/{id}` | `Authorization: Bearer <TOKEN>` | Detalle de viaje con **control estricto de autorización (403 si es ajeno)** |
+| `PATCH` | `/api/trips/{id}/accept` | `Authorization: Bearer <TOKEN>` | Conductor acepta carrera asignada |
+| `POST` | `/api/driver/location` | `Authorization: Bearer <TOKEN>` | Transmisión de telemetría GPS del conductor |
+| `GET` | `/api/drivers/available`| `Authorization: Bearer <TOKEN>` | Lista de taxis disponibles en el Valle de Ubaté |
+
+---
+
+## 🛡️ Matriz de Auditoría y Pruebas Técnicas
+
+* **Control de Acceso (403):** Las rutas de flota, conductores y usuarios están restringidas exclusivamente al rol `admin` mediante el middleware `CheckRole`. Pasajeros o conductores que intenten ingresar reciben HTTP 403.
+* **Protección CSRF:** Todos los formularios web CMS contienen `@csrf`. Peticiones alteradas sin token generan error HTTP 419.
+* **Validación de Archivos:** Las fotos de perfil de conductores se validan estrictamente (`image`, `mimes:jpeg,jpg,png,webp`, `max:2048`). Archivos `.pdf`, `.php` o sobredimensionados son rechazados.
+* **Seguridad de Datos:** El archivo `.env` se encuentra ignorado por Git (`.gitignore`) para proteger credenciales y llaves criptográficas.
