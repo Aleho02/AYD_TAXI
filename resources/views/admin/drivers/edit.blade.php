@@ -21,7 +21,7 @@
                     </div>
                 @else
                     <div style="width: 64px; height: 64px; border-radius: 50%; background-color: #334155; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #94a3b8;">
-                        👤
+                        <i class="bi bi-person-fill"></i>
                     </div>
                     <div>
                         <div style="font-weight: 600; font-size: 0.95rem;">Sin fotografía cargada</div>
@@ -90,7 +90,7 @@
             <!-- Reemplazo de Foto (Punto 5) -->
             <div class="form-group" style="background: rgba(15, 23, 42, 0.4); padding: 1.25rem; border-radius: 10px; border: 1px dashed var(--border-color);">
                 <label for="photo" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span>📸 Reemplazar Fotografía</span>
+                    <span><i class="bi bi-camera-fill"></i> Reemplazar Fotografía</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted);">JPG, PNG o WEBP (Máx. 2MB)</span>
                 </label>
                 <input type="file" id="photo" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp">

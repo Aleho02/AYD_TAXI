@@ -6,7 +6,7 @@
 <div style="max-width: 480px; margin: 2rem auto;">
     <div class="card" style="padding: 2.25rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📝</div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"><i class="bi bi-person-plus-fill" style="color: var(--primary);"></i></div>
             <h2 style="font-size: 1.65rem; font-weight: 700;">Registro en AYD TAXII</h2>
             <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">Crea tu cuenta para la plataforma del Valle de Ubaté</p>
         </div>

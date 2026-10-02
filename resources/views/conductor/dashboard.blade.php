@@ -18,7 +18,7 @@
                 <img src="{{ asset('storage/' . $driver->photo_path) }}" alt="{{ $driver->name }}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin: 0 auto 0.75rem;">
             @else
                 <div style="width: 90px; height: 90px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; margin: 0 auto 0.75rem;">
-                    🚖
+                    <i class="bi bi-taxi-front-fill" style="color: var(--primary);"></i>
                 </div>
             @endif
             <h3 style="font-size: 1.25rem; font-weight: 700;">{{ $driver->name }}</h3>
@@ -68,7 +68,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Origen ➔ Destino</th>
+                            <th>Origen <i class="bi bi-arrow-right"></i> Destino</th>
                             <th>Distancia</th>
                             <th>Tarifa</th>
                             <th>Estado</th>
@@ -104,7 +104,7 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Origen ➔ Destino</th>
+                            <th>Origen <i class="bi bi-arrow-right"></i> Destino</th>
                             <th>Valor</th>
                             <th>Estado</th>
                         </tr>
@@ -113,7 +113,7 @@
                         @forelse($trips as $myTrip)
                             <tr>
                                 <td style="font-size: 0.8rem; color: var(--text-muted);">{{ $myTrip->created_at->format('d/m/Y H:i') }}</td>
-                                <td>{{ $myTrip->origin_address }} ➔ {{ $myTrip->destination_address }}</td>
+                                <td>{{ $myTrip->origin_address }} <i class="bi bi-arrow-right"></i> {{ $myTrip->destination_address }}</td>
                                 <td style="color: var(--primary); font-weight: 700;">${{ number_format($myTrip->estimated_fare, 0, ',', '.') }}</td>
                                 <td><span class="status-badge status-info">{{ ucfirst($myTrip->status) }}</span></td>
                             </tr>

@@ -6,7 +6,7 @@
 <div style="max-width: 440px; margin: 3rem auto;">
     <div class="card" style="padding: 2.25rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 2.8rem; margin-bottom: 0.5rem;">🚖</div>
+            <div style="font-size: 2.8rem; margin-bottom: 0.5rem;"><i class="bi bi-taxi-front-fill" style="color: var(--primary);"></i></div>
             <h2 style="font-size: 1.65rem; font-weight: 700;">Ingreso al Sistema</h2>
             <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.35rem;">AYD TAXII - Valle de Ubaté</p>
         </div>

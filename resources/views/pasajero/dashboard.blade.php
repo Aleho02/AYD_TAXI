@@ -61,7 +61,7 @@
                         <tr>
                             <td>
                                 <div style="font-weight: 600; font-size: 0.88rem;">{{ $trip->origin_address }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">➔ {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="bi bi-arrow-right"></i> {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
                             </td>
                             <td style="font-weight: 700; color: var(--primary);">${{ number_format($trip->estimated_fare, 0, ',', '.') }}</td>
                             <td>

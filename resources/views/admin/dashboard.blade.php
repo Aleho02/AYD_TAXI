@@ -68,7 +68,7 @@
                         <tr>
                             <td>
                                 <div style="font-weight: 600;">{{ $trip->origin_address }}</div>
-                                <div style="font-size: 0.78rem; color: var(--text-muted);">➔ {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);"><i class="bi bi-arrow-right"></i> {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
                             </td>
                             <td>{{ $trip->passenger ? $trip->passenger->name : 'N/A' }}</td>
                             <td style="font-weight: 700; color: var(--primary);">${{ number_format($trip->estimated_fare, 0, ',', '.') }} COP</td>
@@ -135,7 +135,7 @@
                             </td>
                             <td style="font-size: 0.82rem; color: var(--text-muted);">
                                 @if($driver->latitude && $driver->longitude)
-                                    📍 {{ number_format($driver->latitude, 4) }}, {{ number_format($driver->longitude, 4) }}
+                                    <i class="bi bi-geo-alt-fill" style="color: var(--primary);"></i> {{ number_format($driver->latitude, 4) }}, {{ number_format($driver->longitude, 4) }}
                                 @else
                                     Sin señal
                                 @endif

@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
             --primary: #f59e0b;
@@ -346,7 +348,7 @@
 <body>
     <nav class="navbar">
         <a href="{{ url('/') }}" class="nav-brand">
-            <span>🚖 AYD TAXII</span>
+            <span><i class="bi bi-taxi-front-fill"></i> AYD TAXII</span>
             <span class="brand-badge">Valle de Ubaté</span>
         </a>
 
@@ -383,13 +385,13 @@
     <main class="container">
         @if(session('success'))
             <div class="alert alert-success">
-                <span>✓</span> {{ session('success') }}
+                <span><i class="bi bi-check-circle-fill"></i></span> {{ session('success') }}
             </div>
         @endif
 
         @if(session('error'))
             <div class="alert alert-danger">
-                <span>✕</span> {{ session('error') }}
+                <span><i class="bi bi-x-circle-fill"></i></span> {{ session('error') }}
             </div>
         @endif
 

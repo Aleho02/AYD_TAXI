@@ -60,7 +60,7 @@
             <!-- Sección de Carga de Fotografía del Conductor (Requerimiento Punto 5) -->
             <div class="form-group" style="background: rgba(15, 23, 42, 0.4); padding: 1.25rem; border-radius: 10px; border: 1px dashed var(--border-color);">
                 <label for="photo" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span>📸 Fotografía del Conductor</span>
+                    <span><i class="bi bi-camera-fill"></i> Fotografía del Conductor</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Formatos: JPG, PNG, WEBP (Máx. 2MB)</span>
                 </label>
                 <input type="file" id="photo" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp">
