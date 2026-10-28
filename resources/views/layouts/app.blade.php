@@ -371,7 +371,7 @@
                 <span style="font-size: 0.9rem; font-weight: 500;">{{ auth()->user()->name }}</span>
                 <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                     @csrf
-                    <button type="submit" class="btn-logout">Salir</button>
+                    <button type="submit" class="btn-logout">Cerrar Sesión</button>
                 </form>
             </div>
         @else

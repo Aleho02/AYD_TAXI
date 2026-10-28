@@ -27,7 +27,7 @@ class DashboardController extends Controller
 
         $recentTrips = Trip::with(['passenger', 'driver'])
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         $drivers = User::where('role', 'conductor')

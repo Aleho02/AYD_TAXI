@@ -36,10 +36,14 @@ Route::middleware(['auth'])->group(function () {
     // Panel Conductor
     Route::middleware(['role:conductor'])->prefix('conductor')->name('conductor.')->group(function () {
         Route::get('/dashboard', [ConductorDashboardController::class, 'index'])->name('dashboard');
+        Route::patch('/trips/{trip}/accept', [ConductorDashboardController::class, 'acceptTrip'])->name('trips.accept');
+        Route::patch('/trips/{trip}/status', [ConductorDashboardController::class, 'updateTripStatus'])->name('trips.status');
     });
 
     // Panel Pasajero
     Route::middleware(['role:pasajero'])->prefix('pasajero')->name('pasajero.')->group(function () {
         Route::get('/dashboard', [PasajeroDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/trips', [PasajeroDashboardController::class, 'storeTrip'])->name('trips.store');
+        Route::patch('/trips/{trip}/cancel', [PasajeroDashboardController::class, 'cancelTrip'])->name('trips.cancel');
     });
 });

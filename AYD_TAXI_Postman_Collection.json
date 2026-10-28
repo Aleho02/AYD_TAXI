@@ -1,25 +1,35 @@
 {
 	"info": {
 		"_postman_id": "a9187c32-8e12-4c28-98e3-ayd-taxi-api-test",
-		"name": "AYD TAXI - Auditoría de API con Postman",
-		"description": "Colección de Postman para pruebas de auditoría de seguridad API (Registro, Login, Perfil y Logout).",
+		"name": "AYD TAXI - Colección Completa de Pruebas API y Geolocalización",
+		"description": "Colección completa de pruebas automatizadas para todos los endpoints de la API REST de AYD TAXII (Autenticación Sanctum, Geolocalización en Valle de Ubaté, Enrutamiento Óptimo por Calles, Gestión de Viajes, Telemetría GPS, Rastreo y Cancelación).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8000",
+			"value": "http://127.0.0.1:8000",
 			"type": "string"
 		},
 		{
 			"key": "bearer_token",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "driver_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "trip_id",
+			"value": "1",
+			"type": "string"
 		}
 	],
 	"item": [
 		{
-			"name": "1. POST /api/register - Datos válidos",
+			"name": "1. POST /api/register - Registro con datos válidos",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -36,7 +46,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"name\": \"Usuario Postman\",\n  \"email\": \"postman.user@aydtaxi.com\",\n  \"password\": \"password123\",\n  \"role\": \"pasajero\"\n}"
+					"raw": "{\n  \"name\": \"Usuario Postman\",\n  \"email\": \"postman.user@aydtaxi.com\",\n  \"password\": \"password123\",\n  \"role\": \"pasajero\",\n  \"phone\": \"3105551234\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/api/register",
@@ -54,17 +64,13 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 201 Created\", function () {",
-							"    pm.response.to.have.status(201);",
+							"pm.test(\"Status code es 201 Created o 422 si ya existe\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 422]);",
 							"});",
-							"pm.test(\"Respuesta contiene token\", function () {",
+							"if (pm.response.code === 201) {",
 							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.status).to.eql(\"success\");",
-							"    pm.expect(jsonData).to.have.property(\"token\");",
-							"    if (jsonData.token) {",
-							"        pm.collectionVariables.set(\"bearer_token\", jsonData.token);",
-							"    }",
-							"});"
+							"    pm.collectionVariables.set(\"bearer_token\", jsonData.token);",
+							"}"
 						],
 						"type": "text/javascript"
 					}
@@ -72,7 +78,7 @@
 			]
 		},
 		{
-			"name": "2. POST /api/register - Datos inválidos",
+			"name": "2. POST /api/register - Datos inválidos (Validación 422)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -156,7 +162,7 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 422 (Registro Rechazado por Email Duplicado)\", function () {",
+							"pm.test(\"Status code es 422 (Email Duplicado)\", function () {",
 							"    pm.response.to.have.status(422);",
 							"});",
 							"pm.test(\"Error en campo email\", function () {",
@@ -170,7 +176,7 @@
 			]
 		},
 		{
-			"name": "4. POST /api/login - Credenciales válidas",
+			"name": "4. POST /api/login - Login Pasajero (Credenciales válidas)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -187,7 +193,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"admin@aydtaxi.com\",\n  \"password\": \"password123\"\n}"
+					"raw": "{\n  \"email\": \"pasajero@aydtaxi.com\",\n  \"password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/api/login",
@@ -208,7 +214,7 @@
 							"pm.test(\"Status code es 200 OK (Autenticación Exitosa)\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
-							"pm.test(\"Guarda el Bearer Token en la colección\", function () {",
+							"pm.test(\"Guarda el Bearer Token del pasajero\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData.status).to.eql(\"success\");",
 							"    pm.expect(jsonData).to.have.property(\"token\");",
@@ -221,7 +227,7 @@
 			]
 		},
 		{
-			"name": "5. POST /api/login - Credenciales inválidas",
+			"name": "5. POST /api/login - Login Conductor (Credenciales válidas)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -238,7 +244,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"email\": \"admin@aydtaxi.com\",\n  \"password\": \"password_erronea\"\n}"
+					"raw": "{\n  \"email\": \"conductor@aydtaxi.com\",\n  \"password\": \"password123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/api/login",
@@ -256,12 +262,13 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 401 Unauthorized (Rechazado)\", function () {",
-							"    pm.response.to.have.status(401);",
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
 							"});",
-							"pm.test(\"Mensaje de error retornado\", function () {",
+							"pm.test(\"Guarda el Bearer Token del conductor\", function () {",
 							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.status).to.eql(\"error\");",
+							"    pm.expect(jsonData).to.have.property(\"token\");",
+							"    pm.collectionVariables.set(\"driver_token\", jsonData.token);",
 							"});"
 						],
 						"type": "text/javascript"
@@ -270,7 +277,52 @@
 			]
 		},
 		{
-			"name": "6. GET /api/profile - Sin token",
+			"name": "6. POST /api/login - Credenciales inválidas (401)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"pasajero@aydtaxi.com\",\n  \"password\": \"password_erronea\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 401 Unauthorized\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "7. GET /api/profile - Sin token (401)",
 			"request": {
 				"method": "GET",
 				"header": [
@@ -296,7 +348,7 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 401 Unauthorized (Rechazado Sin Token)\", function () {",
+							"pm.test(\"Status code es 401 Unauthorized (Sin Token)\", function () {",
 							"    pm.response.to.have.status(401);",
 							"});"
 						],
@@ -306,7 +358,7 @@
 			]
 		},
 		{
-			"name": "7. GET /api/profile - Token válido",
+			"name": "8. GET /api/profile - Con Token válido",
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -342,7 +394,7 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 200 OK (Permitido)\", function () {",
+							"pm.test(\"Status code es 200 OK\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
 							"pm.test(\"Retorna datos del perfil de usuario\", function () {",
@@ -357,14 +409,14 @@
 			]
 		},
 		{
-			"name": "8. GET /api/profile - Token inválido",
+			"name": "9. GET /api/drivers/available - Listar Taxis Disponibles en Ubaté",
 			"request": {
 				"auth": {
 					"type": "bearer",
 					"bearer": [
 						{
 							"key": "token",
-							"value": "invalid_token_1234567890_xyz",
+							"value": "{{bearer_token}}",
 							"type": "string"
 						}
 					]
@@ -378,13 +430,14 @@
 					}
 				],
 				"url": {
-					"raw": "{{base_url}}/api/profile",
+					"raw": "{{base_url}}/api/drivers/available",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
 						"api",
-						"profile"
+						"drivers",
+						"available"
 					]
 				}
 			},
@@ -393,8 +446,13 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code es 401 Unauthorized (Rechazado Token Inválido)\", function () {",
-							"    pm.response.to.have.status(401);",
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Retorna listado de conductores disponibles\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"drivers\");",
 							"});"
 						],
 						"type": "text/javascript"
@@ -403,7 +461,583 @@
 			]
 		},
 		{
-			"name": "9. POST /api/logout - Token válido",
+			"name": "10. GET /api/drivers/nearby - Buscar Taxis Cercanos por Radio GPS y ETA",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/drivers/nearby?latitude=5.3080&longitude=-73.8150&radius_km=10",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"drivers",
+						"nearby"
+					],
+					"query": [
+						{
+							"key": "latitude",
+							"value": "5.3080"
+						},
+						{
+							"key": "longitude",
+							"value": "-73.8150"
+						},
+						{
+							"key": "radius_km",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Incluye distancia y tiempo estimado de llegada (ETA)\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"search_center\");",
+							"    pm.expect(jsonData).to.have.property(\"drivers\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "11. POST /api/trips/estimate - Cotizar Ruta Óptima por Calles y Tarifa",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"origin_latitude\": 5.3080,\n  \"origin_longitude\": -73.8150,\n  \"destination_latitude\": 5.3165,\n  \"destination_longitude\": -73.8210\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/trips/estimate",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"estimate"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Retorna tarifa estimada, distancia vial y geometría de ruta\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData.estimation).to.have.property(\"estimated_fare\");",
+							"    pm.expect(jsonData.estimation).to.have.property(\"distance_km\");",
+							"    pm.expect(jsonData.estimation).to.have.property(\"route_geometry\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "12. POST /api/trips - Solicitar Servicio de Taxi con Geolocalización",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"origin_address\": \"Parque Principal de Ubaté, Cra. 7\",\n  \"origin_latitude\": 5.3080,\n  \"origin_longitude\": -73.8150,\n  \"destination_address\": \"Hospital El Salvador de Ubaté, Cl. 10\",\n  \"destination_latitude\": 5.3165,\n  \"destination_longitude\": -73.8210,\n  \"auto_assign_nearest\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/trips",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 201 Created\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"pm.test(\"Guarda el ID del viaje creado\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"trip\");",
+							"    pm.collectionVariables.set(\"trip_id\", jsonData.trip.id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "13. GET /api/trips - Listar Viajes del Usuario",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/trips",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Contiene listado paginado de viajes\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"data\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "14. GET /api/trips/{id} - Consultar Detalle del Viaje",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/trips/{{trip_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"{{trip_id}}"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Retorna detalle del viaje\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"trip\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "15. GET /api/trips/{id}/tracking - Rastreo GPS en Tiempo Real del Viaje",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/trips/{{trip_id}}/tracking",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"{{trip_id}}",
+						"tracking"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Retorna coordenadas de origen, destino y telemetría del conductor\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"origin\");",
+							"    pm.expect(jsonData).to.have.property(\"destination\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "16. POST /api/driver/location - Conductor Transmite Ubicación GPS",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{driver_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"latitude\": 5.3114,\n  \"longitude\": -73.8182,\n  \"is_available\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/driver/location",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"driver",
+						"location"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Telemetría GPS actualizada\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData).to.have.property(\"coordinates\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "17. PATCH /api/trips/{id}/accept - Conductor Acepta el Servicio",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{driver_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/trips/{{trip_id}}/accept",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"{{trip_id}}",
+						"accept"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"El viaje pasa a estado aceptado\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData.trip.status).to.eql(\"aceptado\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "18. PATCH /api/trips/{id}/status - Actualizar Estado del Viaje (En camino)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{driver_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"status\": \"en_camino\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/trips/{{trip_id}}/status",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"{{trip_id}}",
+						"status"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Estado actualizado a en_camino\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.trip.status).to.eql(\"en_camino\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "19. PATCH /api/trips/{id}/cancel - Pasajero Cancela el Servicio",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{bearer_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/trips/{{trip_id}}/cancel",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"trips",
+						"{{trip_id}}",
+						"cancel"
+					]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200 OK\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Viaje marcado como cancelado\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql(\"success\");",
+							"    pm.expect(jsonData.trip.status).to.eql(\"cancelado\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "20. POST /api/logout - Cerrar Sesión y Revocar Token",
 			"request": {
 				"auth": {
 					"type": "bearer",

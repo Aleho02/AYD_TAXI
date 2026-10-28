@@ -68,26 +68,45 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Pasajero</th>
                             <th>Origen <i class="bi bi-arrow-right"></i> Destino</th>
                             <th>Distancia</th>
                             <th>Tarifa</th>
-                            <th>Estado</th>
+                            <th>Estado / Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($availableTrips as $trip)
                             <tr>
                                 <td>
+                                    <div style="font-weight: 600;">{{ $trip->passenger ? $trip->passenger->name : 'Pasajero' }}</div>
+                                    @if($trip->passenger && $trip->passenger->phone)
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="bi bi-telephone"></i> {{ $trip->passenger->phone }}</div>
+                                    @endif
+                                </td>
+                                <td>
                                     <div style="font-weight: 600;">{{ $trip->origin_address }}</div>
                                     <div style="font-size: 0.75rem; color: var(--text-muted);">Hacia: {{ $trip->destination_address }}</div>
+                                    <a href="https://www.google.com/maps/dir/?api=1&origin={{ $trip->origin_latitude }},{{ $trip->origin_longitude }}&destination={{ $trip->destination_latitude }},{{ $trip->destination_longitude }}&travelmode=driving" target="_blank" rel="noopener" style="font-size: 0.75rem; color: #60a5fa; text-decoration: none; font-weight: 600;">
+                                        <i class="bi bi-google"></i> Ver ruta en Google Maps
+                                    </a>
                                 </td>
                                 <td>{{ $trip->distance_km }} km</td>
                                 <td style="color: var(--primary); font-weight: 700;">${{ number_format($trip->estimated_fare, 0, ',', '.') }}</td>
-                                <td><span class="status-badge status-warning">Esperando taxi</span></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span class="status-badge status-warning">Esperando taxi</span>
+                                        <form action="{{ route('conductor.trips.accept', $trip) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-primary btn-sm">Aceptar</button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No hay solicitudes pendientes en este momento.</td>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No hay solicitudes pendientes en este momento.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -104,6 +123,7 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
+                            <th>Pasajero</th>
                             <th>Origen <i class="bi bi-arrow-right"></i> Destino</th>
                             <th>Valor</th>
                             <th>Estado</th>
@@ -113,13 +133,37 @@
                         @forelse($trips as $myTrip)
                             <tr>
                                 <td style="font-size: 0.8rem; color: var(--text-muted);">{{ $myTrip->created_at->format('d/m/Y H:i') }}</td>
+                                <td style="font-weight: 600; font-size: 0.85rem;">{{ $myTrip->passenger ? $myTrip->passenger->name : 'Pasajero' }}</td>
                                 <td>{{ $myTrip->origin_address }} <i class="bi bi-arrow-right"></i> {{ $myTrip->destination_address }}</td>
                                 <td style="color: var(--primary); font-weight: 700;">${{ number_format($myTrip->estimated_fare, 0, ',', '.') }}</td>
-                                <td><span class="status-badge status-info">{{ ucfirst($myTrip->status) }}</span></td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        @if($myTrip->status === 'completado')
+                                            <span class="status-badge status-success">Completado</span>
+                                        @elseif($myTrip->status === 'cancelado')
+                                            <span class="status-badge status-danger">Cancelado</span>
+                                        @elseif($myTrip->status === 'en_camino')
+                                            <span class="status-badge status-warning">En camino</span>
+                                            <form action="{{ route('conductor.trips.status', $myTrip) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="completado">
+                                                <button type="submit" class="btn btn-secondary btn-sm">Finalizar</button>
+                                            </form>
+                                        @else
+                                            <span class="status-badge status-info">{{ ucfirst($myTrip->status) }}</span>
+                                            <form action="{{ route('conductor.trips.accept', $myTrip) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-primary btn-sm">Iniciar</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No tienes viajes asignados actualmente.</td>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No tienes viajes asignados actualmente.</td>
                             </tr>
                         @endforelse
                     </tbody>

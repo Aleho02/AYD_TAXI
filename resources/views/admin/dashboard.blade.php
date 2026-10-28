@@ -58,7 +58,7 @@
                 <thead>
                     <tr>
                         <th>Origen / Destino</th>
-                        <th>Pasajero</th>
+                        <th>Pasajero / Conductor</th>
                         <th>Tarifa Est.</th>
                         <th>Estado</th>
                     </tr>
@@ -70,7 +70,12 @@
                                 <div style="font-weight: 600;">{{ $trip->origin_address }}</div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);"><i class="bi bi-arrow-right"></i> {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
                             </td>
-                            <td>{{ $trip->passenger ? $trip->passenger->name : 'N/A' }}</td>
+                            <td>
+                                <div style="font-weight: 600;">{{ $trip->passenger ? $trip->passenger->name : 'N/A' }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                    <i class="bi bi-taxi-front"></i> {{ $trip->driver ? $trip->driver->name : 'Esperando conductor' }}
+                                </div>
+                            </td>
                             <td style="font-weight: 700; color: var(--primary);">${{ number_format($trip->estimated_fare, 0, ',', '.') }} COP</td>
                             <td>
                                 @if($trip->status === 'completado')
@@ -79,6 +84,8 @@
                                     <span class="status-badge status-warning">En camino</span>
                                 @elseif($trip->status === 'aceptado')
                                     <span class="status-badge status-info">Aceptado</span>
+                                @elseif($trip->status === 'solicitado')
+                                    <span class="status-badge status-info">Solicitado</span>
                                 @else
                                     <span class="status-badge status-danger">{{ ucfirst($trip->status) }}</span>
                                 @endif

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Administrador del CMS
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@aydtaxi.com'],
             [
                 'name' => 'Administrador General AYD',
@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Conductor de taxi de Ubaté
-        $conductor = User::firstOrCreate(
+        $conductor = User::updateOrCreate(
             ['email' => 'conductor@aydtaxi.com'],
             [
                 'name' => 'Carlos Rodríguez (Conductor)',
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Vehículo asignado al conductor
-        $vehicle = Vehicle::firstOrCreate(
+        $vehicle = Vehicle::updateOrCreate(
             ['license_plate' => 'UBT345'],
             [
                 'driver_id' => $conductor->id,
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Pasajero cliente
-        $pasajero = User::firstOrCreate(
+        $pasajero = User::updateOrCreate(
             ['email' => 'pasajero@aydtaxi.com'],
             [
                 'name' => 'Mariana Gómez (Pasajera)',
