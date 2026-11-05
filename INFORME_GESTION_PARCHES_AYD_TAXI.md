@@ -225,12 +225,12 @@ El plan de gestión de parches establece la ruta de acción, los plazos de atenc
 Siguiendo las buenas prácticas de ingeniería de software seguro, antes de aplicar cualquier parche se aseguró la trazabilidad en Git mediante una rama dedicada y un commit de estado previo:
 ```bash
 git status
-git checkout -b actualizaciones-api
+git checkout -b gestion-parches-seguridad
 git add .
-git commit -m "feat(api): actualizaciones de endpoints de viajes, geolocalizacion, seguridad y pruebas"
+git commit -m "feat(security): aplicacion de parches CSP, SRI y middleware de cabeceras seguras"
 git log -1 --oneline
 ```
-*Identificador del commit previo de respaldo:* `2bdf3e5` (subido satisfactoriamente al repositorio GitHub en la rama remota `actualizaciones-api`).
+*Identificador del commit previo de respaldo:* `2bdf3e5` y `6609092` (subido satisfactoriamente al repositorio GitHub en la rama remota `gestion-parches-seguridad`).
 
 ### 6.2 Aplicación Controlada de Parches
 1. **Frontend (NPM):** Se ejecutó el saneamiento de paquetes con `npm audit fix`, actualizando las versiones de librerías indirectas vulnerables en `node_modules` y sincronizando `package-lock.json`.
@@ -354,7 +354,7 @@ Porque el panorama de amenazas es dinámico y continuo. Diariamente investigador
 
 * **Anexo A. Repositorio Oficial de GitHub:**  
   Rama de trabajo con los cambios y parches aplicados:  
-  [https://github.com/Aleho02/AYD_TAXI/tree/actualizaciones-api](https://github.com/Aleho02/AYD_TAXI/tree/actualizaciones-api)
+  [https://github.com/Aleho02/AYD_TAXI/tree/gestion-parches-seguridad](https://github.com/Aleho02/AYD_TAXI/tree/gestion-parches-seguridad)
 * **Anexo B. Video Demostrativo de Explicación Técnica:**  
   [Enlace al video de sustentación de laboratorio]
 * **Anexo C. Informes y Logs de Auditoría:**  
