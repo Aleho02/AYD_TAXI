@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordResetOtpMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -83,7 +86,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Revocar tokens anteriores opcionalmente o generar nuevo
         $token = $user->createToken('api_auth_token')->plainTextToken;
 
         return response()->json([
@@ -101,6 +103,82 @@ class AuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
         ], 200);
+    }
+
+    /**
+     * Enviar código OTP de 6 dígitos al correo registrado (API)
+     */
+    public function sendResetCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'exists:users,email'],
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Debe ingresar un correo electrónico válido.',
+            'email.exists' => 'No existe ningún usuario registrado con este correo.',
+        ]);
+
+        $user = User::where('email', $validated['email'])->firstOrFail();
+        $otpCode = (string) random_int(100000, 999999);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            [
+                'token' => Hash::make($otpCode),
+                'created_at' => now(),
+            ]
+        );
+
+        Mail::to($user->email)->send(new PasswordResetOtpMail($user, $otpCode));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha enviado el código OTP de 6 dígitos al correo ' . $user->email,
+        ]);
+    }
+
+    /**
+     * Verificar código OTP y actualizar contraseña (API)
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'exists:users,email'],
+            'otp_code' => ['required', 'digits:6'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $resetRecord = DB::table('password_reset_tokens')
+            ->where('email', $validated['email'])
+            ->first();
+
+        if (!$resetRecord || !Hash::check($validated['otp_code'], $resetRecord->token)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El código OTP ingresado es inválido.',
+            ], 422);
+        }
+
+        if ($resetRecord->created_at && Carbon::parse($resetRecord->created_at)->addMinutes(15)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El código OTP ha expirado.',
+            ], 422);
+        }
+
+        $user = User::where('email', $validated['email'])->firstOrFail();
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Contraseña restablecida exitosamente.',
+        ]);
     }
 
     /**

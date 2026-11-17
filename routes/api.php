@@ -23,9 +23,11 @@ Route::get('/status', function () {
     ]);
 });
 
-// Rutas públicas de autenticación API
+// Rutas públicas de autenticación API y recuperación de contraseña por correo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetCode']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Rutas protegidas mediante tokens Sanctum
 Route::middleware('auth:sanctum')->group(function () {
