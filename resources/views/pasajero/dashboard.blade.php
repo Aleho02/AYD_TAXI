@@ -1,450 +1,638 @@
 @extends('layouts.app')
 
-@section('title', 'Panel Pasajero')
+@section('title', 'Portal Pasajero - TaxiUbaté Veredal & Urbano')
 
 @section('content')
-<!-- Leaflet CSS & JS para Geolocalización en Tiempo Real -->
+<!-- Leaflet CSS & JS para selección de ruta real en el mapa -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 
-<div style="margin-bottom: 2rem;">
-    <h1 style="font-size: 1.85rem; font-weight: 800;">Panel del Pasajero</h1>
-    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
-        Bienvenido/a, {{ $passenger->name }}. Selecciona tu origen y destino en el mapa geoespacial del Valle de Ubaté o escribe la dirección para solicitar tu taxi.
-    </p>
-</div>
+<style>
+    .pasajero-subbar {
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.9rem 2rem;
+    }
 
-<!-- Formulario + Mapa Geoespacial para Solicitar Taxi -->
-<div class="card" style="margin-bottom: 1.5rem; border-color: rgba(245, 158, 11, 0.4);">
-    <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
-        <h3 class="card-title"><i class="bi bi-geo-alt-fill" style="color: var(--primary); margin-right: 0.5rem;"></i> Solicitar un Taxi con Geolocalización GPS</h3>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span class="status-badge status-success"><i class="bi bi-broadcast"></i> Satélite Ubaté Activo</span>
-            <span class="brand-badge">Base $5.000 + $1.500/km</span>
+    .pasajero-subbar-inner {
+        max-width: 1220px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pasajero-container {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 1.5rem 1.5rem 3rem;
+    }
+
+    .decree-banner {
+        background: #fffcf5;
+        border: 1px solid #fde68a;
+        border-radius: 11px;
+        padding: 0.75rem 1.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
+    }
+
+    .pasajero-split {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 1.35rem;
+        margin-bottom: 2.25rem;
+        align-items: start;
+    }
+
+    .input-route-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.58rem 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+
+    .input-route-box input {
+        border: none;
+        background: transparent;
+        outline: none;
+        width: 100%;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .freq-pill {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 0.24rem 0.6rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .freq-pill:hover {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+    }
+
+    .modality-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.65rem;
+        margin: 0.6rem 0 1.15rem;
+    }
+
+    .modality-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .modality-card.active {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #ffffff;
+    }
+
+    .tariff-box-official {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 1.15rem;
+        margin-bottom: 1.15rem;
+    }
+
+    .tariff-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.76rem;
+        color: #475569;
+        padding: 0.25rem 0;
+    }
+
+    .assigned-unit-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-top: 3px solid #d97706;
+        border-radius: 14px;
+        padding: 1.25rem 1.35rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+
+    .pin-dark-card {
+        background: #0f172a;
+        color: #ffffff;
+        border-radius: 12px;
+        padding: 1.15rem;
+        text-align: center;
+        margin: 0.95rem 0;
+    }
+
+    .pin-digits {
+        display: flex;
+        justify-content: center;
+        gap: 0.55rem;
+        margin: 0.65rem 0;
+    }
+
+    .pin-digit-box {
+        width: 44px;
+        height: 48px;
+        background: #ffffff;
+        color: #0f172a;
+        border-radius: 8px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 1024px) {
+        .pasajero-split, .modality-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- SUB-HEADER PERFIL DEL PASAJERO (DATOS REALES) -->
+<div class="pasajero-subbar">
+    <div class="pasajero-subbar-inner">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <div class="avatar" style="width: 46px; height: 46px; background: #0f766e;">
+                {{ strtoupper(substr($passenger->name, 0, 2)) }}
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <strong style="font-family: 'Outfit', sans-serif; font-size: 1.05rem; color: #0f172a;">
+                        {{ $passenger->name }}
+                    </strong>
+                    <span style="background: #064e3b; color: #6ee7b7; font-size: 0.62rem; font-weight: 700; padding: 0.14rem 0.5rem; border-radius: 99px;">
+                        <i class="bi bi-check-circle"></i> Cuenta Verificada
+                    </span>
+                </div>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.18rem;">
+                    <span>{{ $passenger->email }}</span> •
+                    <span>Viajes registrados: <strong>{{ $trips->total() }}</strong></span>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Controles del Mapa Interactivo -->
-    <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; background: rgba(15, 23, 42, 0.55); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border-color);">
-        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-            <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">Modo de clic en el mapa:</span>
-            <button type="button" id="btnModeOrigin" class="btn btn-primary btn-sm" onclick="setMapMode('origin')">
-                <i class="bi bi-geo-alt-fill"></i> 1. Marcar Origen (Recogida)
-            </button>
-            <button type="button" id="btnModeDest" class="btn btn-secondary btn-sm" onclick="setMapMode('destination')">
-                <i class="bi bi-flag-fill"></i> 2. Marcar Destino
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="useMyGPSLocation()" title="Obtener ubicación actual del navegador">
-                <i class="bi bi-crosshair"></i> Usar mi GPS actual
-            </button>
-            <a id="btnOpenGoogleMaps" href="https://www.google.com/maps/dir/?api=1&origin=5.3080,-73.8150&destination=5.3165,-73.8210&travelmode=driving" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="background-color: #2563eb; color: #fff;" title="Abrir navegación paso a paso en Google Maps">
-                <i class="bi bi-google"></i> Abrir en Google Maps
+        <div style="display: flex; align-items: center; gap: 0.55rem;">
+            <a href="#cotizador-pasajero" class="btn btn-navy btn-sm" style="padding: 0.45rem 0.9rem;">
+                <i class="bi bi-lightning-charge-fill" style="color: #fbbf24;"></i> Solicitar Ruta
+            </a>
+            <a href="#historial-pasajero" class="btn btn-outline btn-sm" style="padding: 0.45rem 0.9rem;">
+                <i class="bi bi-clock-history"></i> Mis Viajes ({{ $trips->total() }})
             </a>
         </div>
-
-        <div id="nearestTaxiBanner" style="font-size: 0.82rem; color: #34d399; font-weight: 600;">
-            <i class="bi bi-taxi-front-fill"></i> Calculando taxi más cercano...
-        </div>
     </div>
-
-    <!-- Mapa Leaflet Valle de Ubaté -->
-    <div id="ubateMap" style="width: 100%; height: 340px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 1.25rem; z-index: 1;"></div>
-
-    <!-- Puntos rápidos de referencia en Ubaté -->
-    <div style="display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-bottom: 1.25rem; font-size: 0.78rem;">
-        <span style="color: var(--text-muted); font-weight: 600;"><i class="bi bi-lightning-charge-fill" style="color: var(--primary);"></i> Puntos rápidos Ubaté:</span>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3080, -73.8150, 'Parque Principal de Ubaté, Cra. 7')">Parque Principal</button>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3165, -73.8210, 'Hospital El Salvador de Ubaté, Cl. 10')">Hospital El Salvador</button>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3042, -73.8178, 'Terminal de Transportes de Ubaté')">Terminal de Transportes</button>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3086, -73.8142, 'Basílica Menor del Santo Cristo de Ubaté')">Basílica Menor</button>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3128, -73.8115, 'Universidad de Cundinamarca - Sede Ubaté')">Univ. Cundinamarca</button>
-        <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;" onclick="setPresetLocation(5.3060, -73.8130, 'Plaza de Mercado de Ubaté')">Plaza de Mercado</button>
-    </div>
-
-    <form action="{{ route('pasajero.trips.store') }}" method="POST" id="requestTaxiForm">
-        @csrf
-        <input type="hidden" id="origin_latitude" name="origin_latitude" value="{{ old('origin_latitude', '5.3080000') }}">
-        <input type="hidden" id="origin_longitude" name="origin_longitude" value="{{ old('origin_longitude', '-73.8150000') }}">
-        <input type="hidden" id="destination_latitude" name="destination_latitude" value="{{ old('destination_latitude', '5.3165000') }}">
-        <input type="hidden" id="destination_longitude" name="destination_longitude" value="{{ old('destination_longitude', '-73.8210000') }}">
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: start;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="origin_address" class="form-label">
-                    <span style="color: #10b981;">●</span> Dirección de Origen (Recogida)
-                </label>
-                <input type="text" id="origin_address" name="origin_address" class="form-control" value="{{ old('origin_address', 'Parque Principal de Ubaté, Cra. 7') }}" placeholder="Selecciona en el mapa o escribe aquí" required>
-                <div id="originCoordsLabel" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; font-family: monospace;">
-                    GPS: 5.3080, -73.8150
-                </div>
-                @error('origin_address')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="destination_address" class="form-label">
-                    <span style="color: #ef4444;">●</span> Dirección de Destino
-                </label>
-                <input type="text" id="destination_address" name="destination_address" class="form-control" value="{{ old('destination_address', 'Hospital El Salvador de Ubaté, Cl. 10') }}" placeholder="Selecciona en el mapa o escribe aquí" required>
-                <div id="destCoordsLabel" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem; font-family: monospace;">
-                    GPS: 5.3165, -73.8210
-                </div>
-                @error('destination_address')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="distance_km" class="form-label">Distancia Calculada (km)</label>
-                <input type="number" step="0.01" min="0.1" max="150" id="distance_km" name="distance_km" class="form-control" value="{{ old('distance_km', '2.4') }}" required>
-                <div id="durationPreview" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.25rem;">
-                    Tiempo est. de viaje: ~5 min
-                </div>
-                @error('distance_km')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="driver_id" class="form-label">Conductor Asignado / Cercano</label>
-                <select id="driver_id" name="driver_id" class="form-control">
-                    <option value="">Asignar cualquier conductor cercano</option>
-                    @foreach($availableDrivers as $driver)
-                        <option value="{{ $driver->id }}" {{ old('driver_id') == $driver->id ? 'selected' : '' }}>
-                            {{ $driver->name }} {{ $driver->vehicle ? '(' . $driver->vehicle->license_plate . ')' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('driver_id')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
-            <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
-                <div>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Tarifa Estimada (Haversine):</span>
-                    <span id="farePreview" style="font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-left: 0.4rem;">$8.600 COP</span>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary" style="padding: 0.7rem 1.5rem; font-size: 0.95rem;">
-                <i class="bi bi-send-fill"></i> Solicitar Servicio Ahora
-            </button>
-        </div>
-    </form>
 </div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-    <!-- Conductores cercanos en Ubaté -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Taxis Disponibles Cercanos</h3>
-            <span class="status-badge status-success">GPS Activo</span>
+<div class="pasajero-container">
+    <!-- BANNER DECRETO MUNICIPAL -->
+    <div class="decree-banner">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 34px; height: 34px; border-radius: 8px; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                <i class="bi bi-hammer"></i>
+            </div>
+            <div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.4px;">
+                    DECRETO MUNICIPAL STT #014 - REGISTRO EN TIEMPO REAL <span style="color: #f59e0b;">●</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #475569;">
+                    Al seleccionar y confirmar tu ruta, se registra automáticamente en la base de datos para el Conductor y el Administrador.
+                </div>
+            </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-            @forelse($availableDrivers as $driver)
-                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.4); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        @if($driver->photo_path)
-                            <img src="{{ asset('storage/' . $driver->photo_path) }}" alt="{{ $driver->name }}" class="avatar">
-                        @else
-                            <div class="avatar">{{ substr($driver->name, 0, 1) }}</div>
-                        @endif
+        <span style="font-size: 0.72rem; font-weight: 700; color: #047857;">
+            Conductores disponibles: {{ $availableDrivers->count() }}
+        </span>
+    </div>
+
+    <!-- SECCIÓN PRINCIPAL DIVIDIDA: COTIZADOR (IZQUIERDA) Y SERVICIO ACTIVO (DERECHA) -->
+    <div class="pasajero-split" id="cotizador-pasajero">
+        <!-- Columna Izquierda: Terminal de Reserva Oficial -->
+        <div>
+            <div class="card" style="margin-bottom: 0.85rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem;">
+                    <div>
+                        <div style="font-size: 0.62rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                            TERMINAL DE RESERVA OFICIAL
+                        </div>
+                        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-top: 0.1rem;">
+                            Cotizador y Solicitud Directa de Ruta
+                        </h2>
+                    </div>
+                    <span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: 99px;">
+                        ● {{ $availableDrivers->count() }} Conductores Activos
+                    </span>
+                </div>
+
+                <!-- Mapa Interactivo Leaflet para elegir Origen y Destino en Ubaté -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.4rem;">
+                    <div style="display: flex; gap: 0.4rem;">
+                        <button type="button" id="btnModeOrigin" class="freq-pill" style="background: #0f172a; color: #fff;" onclick="setMapMode('origin')">
+                            1. Clic en Mapa: Origen (A)
+                        </button>
+                        <button type="button" id="btnModeDest" class="freq-pill" onclick="setMapMode('destination')">
+                            2. Clic en Mapa: Destino (B)
+                        </button>
+                    </div>
+                    <button type="button" class="freq-pill" onclick="useMyGPSLocation()">
+                        <i class="bi bi-crosshair"></i> Usar mi GPS
+                    </button>
+                </div>
+
+                <div id="ubateMap" style="width: 100%; height: 220px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 0.9rem; z-index: 1;"></div>
+
+                <!-- Formulario que Registra el Viaje en la Base de Datos para Conductor y Administrador -->
+                <form action="{{ route('pasajero.trips.store') }}" method="POST" id="pasajeroTripForm">
+                    @csrf
+                    <input type="hidden" name="origin_latitude" id="origin_latitude" value="{{ old('origin_latitude', '5.3080000') }}">
+                    <input type="hidden" name="origin_longitude" id="origin_longitude" value="{{ old('origin_longitude', '-73.8150000') }}">
+                    <input type="hidden" name="destination_latitude" id="destination_latitude" value="{{ old('destination_latitude', '5.3165000') }}">
+                    <input type="hidden" name="destination_longitude" id="destination_longitude" value="{{ old('destination_longitude', '-73.8210000') }}">
+                    <input type="hidden" name="estimated_fare" id="estimated_fare_input" value="8600">
+
+                    <!-- Origen -->
+                    <label style="font-size: 0.7rem; font-weight: 700; color: #334155; display: block; margin-bottom: 0.25rem;">
+                        Punto de Recogida (Origen) *
+                    </label>
+                    <div class="input-route-box" style="margin-bottom: 0.55rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem; flex: 1;">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid #10b981; flex-shrink: 0;"></span>
+                            <input type="text" name="origin_address" id="origin_address" value="{{ old('origin_address', 'Parque Principal de Ubaté, Cra. 7') }}" placeholder="Selecciona en el mapa o escribe el origen" required>
+                        </div>
+                        <span id="originCoordsText" style="font-size: 0.62rem; color: #64748b; font-family: monospace;">5.3080, -73.8150</span>
+                    </div>
+                    @error('origin_address')
+                        <div class="invalid-feedback" style="margin-bottom: 0.4rem;">{{ $message }}</div>
+                    @enderror
+
+                    <!-- Destino -->
+                    <label style="font-size: 0.7rem; font-weight: 700; color: #334155; display: block; margin-bottom: 0.25rem;">
+                        Punto de Destino *
+                    </label>
+                    <div class="input-route-box" style="margin-bottom: 0.65rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem; flex: 1;">
+                            <i class="bi bi-geo-alt-fill" style="color: #ef4444; font-size: 0.9rem;"></i>
+                            <input type="text" name="destination_address" id="destination_address" value="{{ old('destination_address', 'Hospital El Salvador de Ubaté, Cl. 10') }}" placeholder="Selecciona en el mapa o escribe el destino" required>
+                        </div>
+                        <span id="sectorBadge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.64rem; font-weight: 800; padding: 0.16rem 0.45rem; border-radius: 4px; white-space: nowrap;">
+                            Ruta Activa
+                        </span>
+                    </div>
+                    @error('destination_address')
+                        <div class="invalid-feedback" style="margin-bottom: 0.4rem;">{{ $message }}</div>
+                    @enderror
+
+                    <!-- Rutas rápidas de Ubaté -->
+                    <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.9rem;">
+                        <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">Seleccionar destino rápido:</span>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.3165, -73.8210, 'Hospital El Salvador de Ubaté, Cl. 10', 2.4, 'Urbano')">Hospital El Salvador</button>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.3042, -73.8178, 'Terminal de Transportes de Ubaté', 1.8, 'Urbano')">Terminal de Transportes</button>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.3086, -73.8142, 'Basílica del Santo Cristo de Ubaté', 1.5, 'Urbano')">Basílica Santo Cristo</button>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.3060, -73.8130, 'Plaza de Mercado San José de Ubaté', 2.1, 'Urbano')">Plaza de Mercado</button>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.3290, -73.8020, 'Vereda Sucunchoque - Sector El Molino', 4.2, 'Veredal')">Vereda Sucunchoque</button>
+                        <button type="button" class="freq-pill" onclick="selectPresetDestination(5.2910, -73.8290, 'Vereda Palogordo - Sector Rural', 5.5, 'Veredal')">Vereda Palogordo</button>
+                    </div>
+
+                    <!-- Distancia y Conductor Asignado (Reales de BD) -->
+                    <div style="display: grid; grid-template-columns: 140px 1fr; gap: 0.75rem; margin-bottom: 0.95rem;">
                         <div>
-                            <div style="font-weight: 600; font-size: 0.9rem;">{{ $driver->name }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                Placa: {{ $driver->vehicle ? $driver->vehicle->license_plate : 'En proceso' }} | {{ $driver->vehicle ? $driver->vehicle->model : '' }}
+                            <label for="distance_km" style="font-size: 0.7rem; font-weight: 700; color: #334155; display: block; margin-bottom: 0.25rem;">Distancia (km) *</label>
+                            <input type="number" step="0.01" min="0.1" max="150" name="distance_km" id="distance_km" class="form-control" value="{{ old('distance_km', '2.4') }}" oninput="recalculateRealFare()" required>
+                        </div>
+                        <div>
+                            <label for="driver_id" style="font-size: 0.7rem; font-weight: 700; color: #334155; display: block; margin-bottom: 0.25rem;">Conductor (Opcional)</label>
+                            <select name="driver_id" id="driver_id" class="form-control">
+                                <option value="">-- Enviar a todos los conductores y Central Admin --</option>
+                                @foreach($availableDrivers as $drv)
+                                    <option value="{{ $drv->id }}" {{ old('driver_id') == $drv->id ? 'selected' : '' }}>
+                                        {{ $drv->name }} {{ $drv->vehicle ? '(' . $drv->vehicle->license_plate . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Desglose Tarifario Oficial (Calculado en vivo según distancia) -->
+                    <div class="tariff-box-official">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #475569; text-transform: uppercase;">
+                                DESGLOSE TARIFARIO OFICIAL (COP)
+                            </span>
+                            <span style="font-size: 0.66rem; font-weight: 700; color: #047857;">
+                                <i class="bi bi-lock-fill"></i> Tarifa Regulada ($5.000 + $1.500/km)
+                            </span>
+                        </div>
+
+                        <div class="tariff-line">
+                            <span>Banderazo / Tarifa base reglamentaria</span>
+                            <strong id="rowBase" style="color: #0f172a;">$5.000</strong>
+                        </div>
+                        <div class="tariff-line">
+                            <span id="rowDistLabel">Recorrido calculado (2.4 km × $1.500)</span>
+                            <strong id="rowDistVal" style="color: #0f172a;">$3.600</strong>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px solid #e2e8f0;">
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.9rem; color: #0f172a;">Total Liquidado a Registrar</div>
+                                <div style="font-size: 0.66rem; color: #64748b;">Visible al instante en Panel Conductor y Admin</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div id="totalFareDisplay" style="font-family: 'Outfit', sans-serif; font-size: 1.85rem; font-weight: 800; color: #0f172a; line-height: 1;">
+                                    $8.600
+                                </div>
+                                <div style="font-size: 0.62rem; color: #64748b; font-weight: 700;">COP</div>
                             </div>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <span class="status-badge status-success">Disponible</span>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="selectDriver({{ $driver->id }})" title="Seleccionar este conductor">
-                            Elegir
-                        </button>
+
+                    <button type="submit" class="btn btn-navy" style="width: 100%; justify-content: center; padding: 0.8rem; font-size: 0.88rem; font-weight: 700;">
+                        <i class="bi bi-123"></i> Confirmar y Registrar Ruta con Código PIN
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Estado Real de tu Solicitud Actual ($activeTrip de BD) -->
+        <div id="pin-seguridad">
+            @php
+                $activeTrip = $trips->firstWhere('status', 'solicitado')
+                    ?? $trips->firstWhere('status', 'aceptado')
+                    ?? $trips->firstWhere('status', 'en_camino');
+            @endphp
+
+            <div class="assigned-unit-card">
+                @if($activeTrip)
+                    @php
+                        $pinCode = str_pad(($activeTrip->id * 137) % 10000, 4, '0', STR_PAD_LEFT);
+                    @endphp
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                        <span style="font-size: 0.66rem; font-weight: 800; color: #0f172a; letter-spacing: 0.4px;">
+                            <span style="color: #10b981;">●</span> SERVICIO ACTIVO #TX-{{ $activeTrip->id }}
+                        </span>
+                        <span class="status-badge {{ $activeTrip->status === 'en_camino' ? 'status-success' : 'status-warning' }}">
+                            {{ strtoupper(str_replace('_', ' ', $activeTrip->status)) }}
+                        </span>
                     </div>
-                </div>
-            @empty
-                <p style="color: var(--text-muted); text-align: center; padding: 1rem;">No hay taxis disponibles en este instante en la zona.</p>
-            @endforelse
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="avatar" style="width: 44px; height: 44px; border-radius: 10px; background: #1e293b;">
+                                <i class="bi bi-taxi-front-fill" style="color: #fbbf24;"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">
+                                    {{ $activeTrip->driver ? $activeTrip->driver->name : 'Esperando aceptación de conductor...' }}
+                                </div>
+                                <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.1rem;">
+                                    Origen: <strong>{{ $activeTrip->origin_address }}</strong>
+                                </div>
+                                <div style="font-size: 0.72rem; color: #64748b;">
+                                    Destino: <strong>{{ $activeTrip->destination_address }}</strong> ({{ $activeTrip->distance_km }} km)
+                                </div>
+                                @if($activeTrip->driver && $activeTrip->driver->vehicle)
+                                    <div style="margin-top: 0.25rem;">
+                                        <span style="background: #fef3c7; border: 1px solid #f59e0b; font-size: 0.65rem; font-weight: 800; padding: 0.08rem 0.35rem; border-radius: 4px; color: #0f172a;">
+                                            PLACA: {{ $activeTrip->driver->vehicle->license_plate }}
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        <strong style="color: #047857; font-size: 0.88rem;">
+                            ${{ number_format($activeTrip->estimated_fare, 0, ',', '.') }}
+                        </strong>
+                    </div>
+
+                    <!-- PIN Obligatorio de Abordaje Seguro -->
+                    <div class="pin-dark-card">
+                        <div style="font-size: 0.62rem; font-weight: 800; color: #94a3b8; letter-spacing: 0.6px; text-transform: uppercase;">
+                            <i class="bi bi-lock-fill" style="color: #fbbf24;"></i> PIN OBLIGATORIO DE ABORDAJE SEGURO
+                        </div>
+
+                        <div class="pin-digits">
+                            <div class="pin-digit-box">{{ $pinCode[0] }}</div>
+                            <div class="pin-digit-box">{{ $pinCode[1] }}</div>
+                            <div class="pin-digit-box">{{ $pinCode[2] }}</div>
+                            <div class="pin-digit-box">{{ $pinCode[3] }}</div>
+                        </div>
+
+                        <p style="font-size: 0.68rem; color: #94a3b8; line-height: 1.35; max-width: 290px; margin: 0 auto;">
+                            Este código PIN corresponde a tu solicitud <strong>#TX-{{ $activeTrip->id }}</strong> ya registrada para el Conductor y el Administrador.
+                        </p>
+                    </div>
+
+                    <form action="{{ route('pasajero.trips.cancel', $activeTrip) }}" method="POST" onsubmit="return confirm('¿Deseas cancelar este servicio de taxi?');">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center;">
+                            <i class="bi bi-x-circle"></i> Cancelar Solicitud Actual
+                        </button>
+                    </form>
+                @else
+                    <div style="text-align: center; padding: 2.25rem 1rem;">
+                        <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; color: #64748b; display: inline-flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 0.75rem;">
+                            <i class="bi bi-taxi-front"></i>
+                        </div>
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 800; color: #0f172a;">
+                            0 Servicios Activos en Curso
+                        </h3>
+                        <p style="font-size: 0.76rem; color: #64748b; margin-top: 0.35rem; line-height: 1.45;">
+                            No tienes ninguna solicitud activa en este momento. Selecciona tu ruta en el mapa o en el cotizador de la izquierda y presiona <strong>"Confirmar y Registrar Ruta"</strong> para enviarla al Conductor y Administrador.
+                        </p>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
-    <!-- Historial de Viajes del Pasajero -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Mis Viajes Recientes</h3>
+    <!-- REGISTRO PERSONAL DE MOVILIDAD: ÚLTIMOS VIAJES REGISTRADOS (100% REAL DE BD) -->
+    <div id="historial-pasajero">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <div style="font-size: 0.62rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                    REGISTRO PERSONAL DE MOVILIDAD (DATOS REALES BD)
+                </div>
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 800; color: #0f172a;">
+                    Mis Viajes Registrados ({{ $trips->total() }})
+                </h3>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Origen / Destino</th>
-                        <th>Conductor</th>
-                        <th>Tarifa Est.</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($trips as $trip)
-                        <tr>
-                            <td>
-                                <div style="font-weight: 600; font-size: 0.88rem;">{{ $trip->origin_address }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="bi bi-arrow-right"></i> {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
-                            </td>
-                            <td style="font-size: 0.82rem; color: var(--text-muted);">
-                                {{ $trip->driver ? $trip->driver->name : 'Por asignar' }}
-                            </td>
-                            <td style="font-weight: 700; color: var(--primary);">${{ number_format($trip->estimated_fare, 0, ',', '.') }}</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                    @if($trip->status === 'completado')
-                                        <span class="status-badge status-success">Completado</span>
-                                    @elseif($trip->status === 'cancelado')
-                                        <span class="status-badge status-danger">Cancelado</span>
-                                    @elseif($trip->status === 'en_camino')
-                                        <span class="status-badge status-warning">En camino</span>
-                                    @elseif($trip->status === 'solicitado')
-                                        <span class="status-badge status-info">Solicitado</span>
-                                    @else
-                                        <span class="status-badge status-info">{{ ucfirst($trip->status) }}</span>
-                                    @endif
 
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>FECHA Y RADICADO</th>
+                            <th>ORIGEN • DESTINO</th>
+                            <th>CONDUCTOR Y UNIDAD</th>
+                            <th>ESTADO</th>
+                            <th>TARIFA</th>
+                            <th style="text-align: right;">ACCIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($trips as $trip)
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a; font-size: 0.8rem;">
+                                        {{ $trip->created_at ? $trip->created_at->format('d/m/Y H:i') : 'Reciente' }}
+                                    </div>
+                                    <div style="font-size: 0.68rem; color: #64748b;">#TX-{{ $trip->id }}</div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.78rem; font-weight: 600; color: #0f172a;">● {{ $trip->origin_address }}</div>
+                                    <div style="font-size: 0.74rem; color: #64748b;"><span style="color: #d97706;">●</span> {{ $trip->destination_address }} ({{ $trip->distance_km }} km)</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 700; font-size: 0.78rem; color: #0f172a;">
+                                        {{ $trip->driver ? $trip->driver->name : 'Sin conductor asignado aún' }}
+                                        @if($trip->driver && $trip->driver->vehicle)
+                                            <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.64rem; padding: 0.08rem 0.35rem; border-radius: 4px; margin-left: 0.25rem;">
+                                                {{ $trip->driver->vehicle->license_plate }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge {{ $trip->status === 'completado' ? 'status-success' : ($trip->status === 'cancelado' ? 'status-danger' : 'status-warning') }}">
+                                        {{ ucfirst(str_replace('_', ' ', $trip->status)) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 800; color: #0f172a; font-size: 0.85rem;">${{ number_format($trip->estimated_fare, 0, ',', '.') }} COP</div>
+                                </td>
+                                <td style="text-align: right;">
                                     @if(in_array($trip->status, ['solicitado', 'aceptado', 'en_camino']))
-                                        <form action="{{ route('pasajero.trips.cancel', $trip) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro/a de que deseas cancelar este servicio de taxi?');">
+                                        <form action="{{ route('pasajero.trips.cancel', $trip) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Seguro de cancelar este viaje?');">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Cancelar servicio">
+                                            <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="bi bi-x-circle"></i> Cancelar
                                             </button>
                                         </form>
+                                    @else
+                                        <span style="font-size: 0.72rem; color: #64748b;">Cerrado</span>
                                     @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No has realizado viajes aún.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2.25rem; color: #64748b;">
+                                    0 viajes registrados en tu historial. Selecciona una ruta arriba para registrar tu primer servicio.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($trips->hasPages())
+                <div style="padding: 0.85rem 1.25rem; border-top: 1px solid #f1f5f9;">
+                    {{ $trips->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>
 
 <script>
-    const availableDrivers = @json($availableDrivers);
-    let currentMapMode = 'origin';
+    let currentMapMode = 'destination';
 
-    // Inicializar Mapa en Villa de San Diego de Ubaté vinculado con capas de Google Maps
-    const googleStreets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: '&copy; Google Maps - Valle de Ubaté'
-    });
-
-    const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: '&copy; Google Maps Satélite - Valle de Ubaté'
-    });
-
-    const openStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const map = L.map('ubateMap').setView([5.3110, -73.8165], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    });
+        attribution: '&copy; OpenStreetMap - Valle de Ubaté'
+    }).addTo(map);
 
-    const map = L.map('ubateMap', {
-        center: [5.3110, -73.8165],
-        zoom: 15,
-        layers: [googleStreets]
-    });
-
-    L.control.layers({
-        "Google Maps (Calles)": googleStreets,
-        "Google Satélite (Híbrido)": googleHybrid,
-        "OpenStreetMap": openStreetMap
-    }, null, { position: 'topright' }).addTo(map);
-
-    // Iconos personalizados
     const originIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#10b981;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);font-weight:800;font-size:13px;">A</div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: '<div style="background:#10b981;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">A</div>',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
     });
 
     const destIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#ef4444;color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);font-weight:800;font-size:13px;">B</div>',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: '<div style="background:#ef4444;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">B</div>',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
     });
 
-    const taxiIcon = L.divIcon({
-        className: '',
-        html: '<div style="background:#f59e0b;color:#000;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #000;box-shadow:0 2px 8px rgba(0,0,0,0.6);font-size:16px;"><i class="bi bi-taxi-front-fill"></i></div>',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-    });
+    let originMarker = L.marker([5.3080, -73.8150], { draggable: true, icon: originIcon }).addTo(map);
+    let destMarker = L.marker([5.3165, -73.8210], { draggable: true, icon: destIcon }).addTo(map);
+    let routeLine = L.polyline([[5.3080, -73.8150], [5.3165, -73.8210]], { color: '#0f172a', weight: 4 }).addTo(map);
 
-    // Marcadores de Origen y Destino arrastrables
-    let originMarker = L.marker([5.3080, -73.8150], { draggable: true, icon: originIcon })
-        .addTo(map)
-        .bindPopup('<b>Punto de Recogida (Origen)</b>');
+    function setMapMode(mode) {
+        currentMapMode = mode;
+        document.getElementById('btnModeOrigin').style.background = mode === 'origin' ? '#0f172a' : '#f8fafc';
+        document.getElementById('btnModeOrigin').style.color = mode === 'origin' ? '#fff' : '#334155';
+        document.getElementById('btnModeDest').style.background = mode === 'destination' ? '#0f172a' : '#f8fafc';
+        document.getElementById('btnModeDest').style.color = mode === 'destination' ? '#fff' : '#334155';
+    }
 
-    let destMarker = L.marker([5.3165, -73.8210], { draggable: true, icon: destIcon })
-        .addTo(map)
-        .bindPopup('<b>Punto de Destino</b>');
-
-    let routeOutline = L.polyline([], {
-        color: '#0f172a',
-        weight: 8,
-        opacity: 0.7,
-        lineCap: 'round',
-        lineJoin: 'round'
-    }).addTo(map);
-
-    let routeLine = L.polyline([], {
-        color: '#f59e0b',
-        weight: 5,
-        opacity: 0.95,
-        lineCap: 'round',
-        lineJoin: 'round'
-    }).addTo(map);
-
-    // Mostrar conductores disponibles en el mapa
-    availableDrivers.forEach(driver => {
-        const lat = parseFloat(driver.latitude || 5.3114);
-        const lng = parseFloat(driver.longitude || -73.8182);
-        const plate = driver.vehicle ? driver.vehicle.license_plate : 'Sin placa';
-        L.marker([lat, lng], { icon: taxiIcon })
-            .addTo(map)
-            .bindPopup(`<b>${driver.name}</b><br>Taxi: ${plate}<br><button type="button" onclick="selectDriver(${driver.id})" style="margin-top:5px;padding:3px 8px;background:#f59e0b;border:none;border-radius:4px;cursor:pointer;font-weight:700;">Elegir este taxi</button>`);
-    });
-
-    function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+    function haversineKm(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                   Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    function setMapMode(mode) {
-        currentMapMode = mode;
-        const btnOrigin = document.getElementById('btnModeOrigin');
-        const btnDest = document.getElementById('btnModeDest');
-        if (mode === 'origin') {
-            btnOrigin.className = 'btn btn-primary btn-sm';
-            btnDest.className = 'btn btn-secondary btn-sm';
-        } else {
-            btnOrigin.className = 'btn btn-secondary btn-sm';
-            btnDest.className = 'btn btn-primary btn-sm';
-        }
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     }
 
     async function reverseGeocode(lat, lng, inputId) {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`);
             const data = await res.json();
             if (data && data.display_name) {
-                const parts = data.display_name.split(',').slice(0, 3).join(',');
-                document.getElementById(inputId).value = parts;
+                document.getElementById(inputId).value = data.display_name.split(',').slice(0, 3).join(',');
             }
-        } catch (e) {
-            // Si falla la red, conserva el nombre o coordenadas
-        }
+        } catch (e) {}
     }
 
-    let routingRequestId = 0;
+    function syncMarkersAndDistance() {
+        const o = originMarker.getLatLng();
+        const d = destMarker.getLatLng();
+        document.getElementById('origin_latitude').value = o.lat.toFixed(7);
+        document.getElementById('origin_longitude').value = o.lng.toFixed(7);
+        document.getElementById('destination_latitude').value = d.lat.toFixed(7);
+        document.getElementById('destination_longitude').value = d.lng.toFixed(7);
+        document.getElementById('originCoordsText').textContent = `${o.lat.toFixed(4)}, ${o.lng.toFixed(4)}`;
+        routeLine.setLatLngs([o, d]);
 
-    async function syncGeolocationData() {
-        const oPos = originMarker.getLatLng();
-        const dPos = destMarker.getLatLng();
-
-        document.getElementById('origin_latitude').value = oPos.lat.toFixed(7);
-        document.getElementById('origin_longitude').value = oPos.lng.toFixed(7);
-        document.getElementById('destination_latitude').value = dPos.lat.toFixed(7);
-        document.getElementById('destination_longitude').value = dPos.lng.toFixed(7);
-
-        document.getElementById('originCoordsLabel').textContent = `GPS: ${oPos.lat.toFixed(4)}, ${oPos.lng.toFixed(4)}`;
-        document.getElementById('destCoordsLabel').textContent = `GPS: ${dPos.lat.toFixed(4)}, ${dPos.lng.toFixed(4)}`;
-
-        const gmapsBtn = document.getElementById('btnOpenGoogleMaps');
-        if (gmapsBtn) {
-            gmapsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${oPos.lat.toFixed(6)},${oPos.lng.toFixed(6)}&destination=${dPos.lat.toFixed(6)},${dPos.lng.toFixed(6)}&travelmode=driving`;
-        }
-
-        updateNearestTaxiBanner(oPos.lat, oPos.lng);
-
-        const currentReq = ++routingRequestId;
-        try {
-            // Consultar motor de enrutamiento vial OSRM para seguir calles y carreras reales
-            const url = `https://router.project-osrm.org/route/v1/driving/${oPos.lng},${oPos.lat};${dPos.lng},${dPos.lat}?overview=full&geometries=geojson&steps=true`;
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (currentReq !== routingRequestId) return;
-
-            if (data && data.code === 'Ok' && data.routes && data.routes.length > 0) {
-                const route = data.routes[0];
-                // Convertir coordenadas GeoJSON [lng, lat] a Leaflet [lat, lng]
-                const streetCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-                routeOutline.setLatLngs(streetCoords);
-                routeLine.setLatLngs(streetCoords);
-
-                // Distancia vial exacta por las calles (en km) y duración real
-                const roadDistKm = Math.max(0.2, route.distance / 1000);
-                const roadDurationMin = Math.max(2, Math.ceil(route.duration / 60));
-
-                document.getElementById('distance_km').value = roadDistKm.toFixed(2);
-                updateFarePreview(roadDurationMin);
-                return;
-            }
-        } catch (err) {
-            // Fallback en caso de no haber conexión al servidor de rutas
-        }
-
-        // Fallback si OSRM no responde
-        routeOutline.setLatLngs([oPos, dPos]);
-        routeLine.setLatLngs([oPos, dPos]);
-        const distKm = Math.max(0.2, calculateHaversineKm(oPos.lat, oPos.lng, dPos.lat, dPos.lng));
-        document.getElementById('distance_km').value = distKm.toFixed(2);
-        updateFarePreview();
+        const dist = Math.max(0.5, haversineKm(o.lat, o.lng, d.lat, d.lng) * 1.25);
+        document.getElementById('distance_km').value = dist.toFixed(2);
+        recalculateRealFare();
     }
 
-    function updateNearestTaxiBanner(lat, lng) {
-        const banner = document.getElementById('nearestTaxiBanner');
-        if (!availableDrivers || availableDrivers.length === 0) {
-            banner.innerHTML = '<span style="color:#f87171;">Sin taxis activos en este instante</span>';
-            return;
-        }
-        let nearest = null;
-        let minDist = Infinity;
-        availableDrivers.forEach(d => {
-            const dLat = parseFloat(d.latitude || 5.3114);
-            const dLng = parseFloat(d.longitude || -73.8182);
-            const dist = calculateHaversineKm(lat, lng, dLat, dLng);
-            if (dist < minDist) {
-                minDist = dist;
-                nearest = d;
-            }
-        });
-        if (nearest) {
-            const eta = Math.max(1, Math.ceil(minDist * 2));
-            const plate = nearest.vehicle ? nearest.vehicle.license_plate : '';
-            banner.innerHTML = `<i class="bi bi-taxi-front-fill"></i> Taxi más cercano: <b>${nearest.name} (${plate})</b> a ${minDist.toFixed(2)} km (~${eta} min)`;
-        }
-    }
-
-    map.on('click', function (e) {
+    map.on('click', function(e) {
         if (currentMapMode === 'origin') {
             originMarker.setLatLng(e.latlng);
             reverseGeocode(e.latlng.lat, e.latlng.lng, 'origin_address');
@@ -453,80 +641,57 @@
             destMarker.setLatLng(e.latlng);
             reverseGeocode(e.latlng.lat, e.latlng.lng, 'destination_address');
         }
-        syncGeolocationData();
+        syncMarkersAndDistance();
     });
 
-    originMarker.on('dragend', function () {
-        const pos = originMarker.getLatLng();
-        reverseGeocode(pos.lat, pos.lng, 'origin_address');
-        syncGeolocationData();
+    originMarker.on('dragend', function() {
+        const p = originMarker.getLatLng();
+        reverseGeocode(p.lat, p.lng, 'origin_address');
+        syncMarkersAndDistance();
     });
 
-    destMarker.on('dragend', function () {
-        const pos = destMarker.getLatLng();
-        reverseGeocode(pos.lat, pos.lng, 'destination_address');
-        syncGeolocationData();
+    destMarker.on('dragend', function() {
+        const p = destMarker.getLatLng();
+        reverseGeocode(p.lat, p.lng, 'destination_address');
+        syncMarkersAndDistance();
     });
 
-    function setPresetLocation(lat, lng, label) {
-        const latlng = L.latLng(lat, lng);
-        if (currentMapMode === 'origin') {
-            originMarker.setLatLng(latlng);
-            document.getElementById('origin_address').value = label;
-            setMapMode('destination');
-        } else {
-            destMarker.setLatLng(latlng);
-            document.getElementById('destination_address').value = label;
-        }
-        map.panTo(latlng);
-        syncGeolocationData();
+    function selectPresetDestination(lat, lng, address, km, sector) {
+        destMarker.setLatLng([lat, lng]);
+        document.getElementById('destination_address').value = address;
+        document.getElementById('destination_latitude').value = lat.toFixed(7);
+        document.getElementById('destination_longitude').value = lng.toFixed(7);
+        document.getElementById('distance_km').value = km;
+        document.getElementById('sectorBadge').textContent = sector;
+        routeLine.setLatLngs([originMarker.getLatLng(), [lat, lng]]);
+        map.panTo([lat, lng]);
+        recalculateRealFare();
     }
 
     function useMyGPSLocation() {
-        if (!navigator.geolocation) {
-            alert('Tu navegador no soporta geolocalización GPS.');
-            return;
-        }
-        navigator.geolocation.getCurrentPosition(
-            function (pos) {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                const latlng = L.latLng(lat, lng);
-                originMarker.setLatLng(latlng);
-                map.setView(latlng, 16);
-                reverseGeocode(lat, lng, 'origin_address');
-                syncGeolocationData();
-                setMapMode('destination');
-            },
-            function () {
-                alert('No se pudo obtener el GPS actual. Puedes hacer clic directamente en el mapa de Ubaté.');
-            }
-        );
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            originMarker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 15);
+            reverseGeocode(lat, lng, 'origin_address');
+            syncMarkersAndDistance();
+        });
     }
 
-    function updateFarePreview(customMinutes = null) {
-        const distInput = document.getElementById('distance_km');
-        const farePreview = document.getElementById('farePreview');
-        const durationPreview = document.getElementById('durationPreview');
-        const dist = parseFloat(distInput.value) || 0;
-        const rawFare = 5000 + (dist * 1500);
-        const roundedFare = Math.max(6000, Math.round(rawFare / 100) * 100);
-        const estMinutes = customMinutes !== null ? customMinutes : Math.max(3, Math.ceil(dist * 2));
-        farePreview.textContent = '$' + roundedFare.toLocaleString('es-CO') + ' COP';
-        if (durationPreview) {
-            durationPreview.textContent = `Ruta óptima por calles: ~${estMinutes} min`;
-        }
+    function recalculateRealFare() {
+        const dist = parseFloat(document.getElementById('distance_km').value) || 0;
+        const base = 5000;
+        const distCost = Math.round((dist * 1500) / 100) * 100;
+        const total = Math.max(6000, base + distCost);
+
+        document.getElementById('rowDistLabel').textContent = `Recorrido calculado (${dist.toFixed(2)} km × $1.500)`;
+        document.getElementById('rowDistVal').textContent = '$' + distCost.toLocaleString('es-CO');
+        document.getElementById('totalFareDisplay').textContent = '$' + total.toLocaleString('es-CO');
+        document.getElementById('estimated_fare_input').value = total;
     }
 
-    function selectDriver(driverId) {
-        const driverSelect = document.getElementById('driver_id');
-        driverSelect.value = driverId;
-        const originInput = document.getElementById('origin_address');
-        originInput.focus();
-        originInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    document.getElementById('distance_km').addEventListener('input', updateFarePreview);
-    syncGeolocationData();
+    recalculateRealFare();
 </script>
 @endsection

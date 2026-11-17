@@ -58,9 +58,9 @@
             </div>
 
             <!-- Sección de Carga de Fotografía del Conductor (Requerimiento Punto 5) -->
-            <div class="form-group" style="background: rgba(15, 23, 42, 0.4); padding: 1.25rem; border-radius: 10px; border: 1px dashed var(--border-color);">
+            <div class="form-group" style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px dashed #cbd5e1;">
                 <label for="photo" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="bi bi-camera-fill"></i> Fotografía del Conductor</span>
+                    <span><i class="bi bi-camera-fill" style="color: var(--primary);"></i> Fotografía del Conductor</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">Formatos: JPG, PNG, WEBP (Máx. 2MB)</span>
                 </label>
                 <input type="file" id="photo" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp">
@@ -73,7 +73,7 @@
             </div>
 
             <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #cbd5e1;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #334155; font-size: 0.88rem; font-weight: 500;">
                     <input type="checkbox" name="is_available" value="1" {{ old('is_available', '1') ? 'checked' : '' }} style="accent-color: var(--primary);">
                     Habilitar disponibilidad inmediata para despacho de servicios
                 </label>

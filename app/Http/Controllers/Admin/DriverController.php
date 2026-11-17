@@ -18,10 +18,19 @@ class DriverController extends Controller
     {
         $drivers = User::where('role', 'conductor')
             ->with('vehicle')
+            ->withCount('driverTrips')
             ->latest()
             ->paginate(10);
 
-        return view('admin.drivers.index', compact('drivers'));
+        $driverStats = [
+            'total_drivers' => User::where('role', 'conductor')->count(),
+            'active_drivers' => User::where('role', 'conductor')->where('is_available', true)->count(),
+            'with_vehicle' => User::where('role', 'conductor')->whereHas('vehicle')->count(),
+            'without_vehicle' => User::where('role', 'conductor')->whereDoesntHave('vehicle')->count(),
+            'inactive_drivers' => User::where('role', 'conductor')->where('is_available', false)->count(),
+        ];
+
+        return view('admin.drivers.index', compact('drivers', 'driverStats'));
     }
 
     public function create(): View
@@ -132,6 +141,19 @@ class DriverController extends Controller
         $driver->update($data);
 
         return redirect()->route('admin.drivers.index')->with('success', 'Conductor y fotografía actualizados exitosamente.');
+    }
+
+    public function toggleAvailability(User $driver): RedirectResponse
+    {
+        if (!$driver->isConductor()) {
+            abort(404);
+        }
+
+        $driver->update([
+            'is_available' => !$driver->is_available,
+        ]);
+
+        return back()->with('success', 'Estado operativo de ' . $driver->name . ' actualizado correctamente.');
     }
 
     public function deletePhoto(User $driver): RedirectResponse

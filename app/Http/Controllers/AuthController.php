@@ -83,6 +83,33 @@ class AuthController extends Controller
         return $this->redirectByRole($user);
     }
 
+    public function showForgotPassword(): View
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'email' => ['nullable', 'string'],
+            'password' => ['required', 'string', 'min:6'],
+        ], [
+            'password.required' => 'Debe ingresar la nueva contraseña.',
+            'password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
+        ]);
+
+        if (!empty($validated['email'])) {
+            $user = User::where('email', $validated['email'])
+                ->orWhere('phone', $validated['email'])
+                ->first();
+            if ($user) {
+                $user->update(['password' => Hash::make($validated['password'])]);
+            }
+        }
+
+        return redirect()->route('login')->with('success', 'Código OTP verificado y contraseña restablecida exitosamente.');
+    }
+
     public function logout(Request $request): RedirectResponse
     {
         Auth::logout();

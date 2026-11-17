@@ -11,20 +11,20 @@
         </div>
 
         <!-- Vista previa de fotografía actual y opción de eliminación (Punto 5) -->
-        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.4); padding: 1rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 1rem 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 @if($driver->photo_path)
                     <img src="{{ asset('storage/' . $driver->photo_path) }}" alt="{{ $driver->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
                     <div>
-                        <div style="font-weight: 600; font-size: 0.95rem;">Fotografía actual almacenada</div>
+                        <div style="font-weight: 600; font-size: 0.95rem; color: #0f172a;">Fotografía actual almacenada</div>
                         <div style="font-size: 0.78rem; color: var(--text-muted);">Ruta en storage: <code>{{ $driver->photo_path }}</code></div>
                     </div>
                 @else
-                    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: #334155; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #94a3b8;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #64748b;">
                         <i class="bi bi-person-fill"></i>
                     </div>
                     <div>
-                        <div style="font-weight: 600; font-size: 0.95rem;">Sin fotografía cargada</div>
+                        <div style="font-weight: 600; font-size: 0.95rem; color: #0f172a;">Sin fotografía cargada</div>
                         <div style="font-size: 0.78rem; color: var(--text-muted);">Puede adjuntar un archivo JPG, PNG o WEBP abajo</div>
                     </div>
                 @endif
@@ -88,9 +88,9 @@
             </div>
 
             <!-- Reemplazo de Foto (Punto 5) -->
-            <div class="form-group" style="background: rgba(15, 23, 42, 0.4); padding: 1.25rem; border-radius: 10px; border: 1px dashed var(--border-color);">
+            <div class="form-group" style="background: #f8fafc; padding: 1.25rem; border-radius: 10px; border: 1px dashed #cbd5e1;">
                 <label for="photo" class="form-label" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="bi bi-camera-fill"></i> Reemplazar Fotografía</span>
+                    <span><i class="bi bi-camera-fill" style="color: var(--primary);"></i> Reemplazar Fotografía</span>
                     <span style="font-size: 0.75rem; color: var(--text-muted);">JPG, PNG o WEBP (Máx. 2MB)</span>
                 </label>
                 <input type="file" id="photo" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp">
@@ -100,7 +100,7 @@
             </div>
 
             <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #cbd5e1;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #334155; font-size: 0.88rem; font-weight: 500;">
                     <input type="checkbox" name="is_available" value="1" {{ old('is_available', $driver->is_available) ? 'checked' : '' }} style="accent-color: var(--primary);">
                     Conductor disponible para recibir servicios
                 </label>

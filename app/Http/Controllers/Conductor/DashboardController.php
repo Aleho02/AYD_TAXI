@@ -12,19 +12,50 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        $driver = $request->user();
+        $driver = $request->user()->load('vehicle');
+
         $trips = Trip::where('driver_id', $driver->id)
             ->with('passenger')
             ->latest()
             ->paginate(10);
 
         $availableTrips = Trip::where('status', 'solicitado')
+            ->where(function ($query) use ($driver) {
+                $query->whereNull('driver_id')
+                      ->orWhere('driver_id', $driver->id);
+            })
             ->with('passenger')
             ->latest()
             ->take(10)
             ->get();
 
-        return view('conductor.dashboard', compact('driver', 'trips', 'availableTrips'));
+        $activeTrip = Trip::where('driver_id', $driver->id)
+            ->whereIn('status', ['aceptado', 'en_camino'])
+            ->with('passenger')
+            ->latest()
+            ->first() ?? $availableTrips->first();
+
+        $driverStats = [
+            'completed_trips' => Trip::where('driver_id', $driver->id)->where('status', 'completado')->count(),
+            'total_earnings' => Trip::where('driver_id', $driver->id)->where('status', 'completado')->sum('estimated_fare'),
+            'total_km' => Trip::where('driver_id', $driver->id)->where('status', 'completado')->sum('distance_km'),
+            'active_count' => Trip::where('driver_id', $driver->id)->whereIn('status', ['aceptado', 'en_camino'])->count(),
+        ];
+
+        return view('conductor.dashboard', compact('driver', 'trips', 'availableTrips', 'activeTrip', 'driverStats'));
+    }
+
+    public function toggleAvailability(Request $request): RedirectResponse
+    {
+        $driver = $request->user();
+        $isAvailable = $request->has('is_available')
+            ? $request->boolean('is_available')
+            : !$driver->is_available;
+
+        $driver->update(['is_available' => $isAvailable]);
+
+        return redirect()->route('conductor.dashboard')
+            ->with('success', 'Estado operativo actualizado a: ' . ($isAvailable ? 'Disponible' : 'Ocupado / Pausa'));
     }
 
     public function acceptTrip(Request $request, Trip $trip): RedirectResponse

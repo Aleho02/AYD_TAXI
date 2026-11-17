@@ -15,14 +15,13 @@ class DashboardController extends Controller
     {
         $passenger = $request->user();
         $trips = Trip::where('passenger_id', $passenger->id)
-            ->with('driver')
+            ->with('driver.vehicle')
             ->latest()
             ->paginate(10);
 
         $availableDrivers = User::where('role', 'conductor')
             ->where('is_available', true)
             ->with('vehicle')
-            ->take(6)
             ->get();
 
         return view('pasajero.dashboard', compact('passenger', 'trips', 'availableDrivers'));
@@ -39,6 +38,7 @@ class DashboardController extends Controller
             'destination_longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'distance_km' => ['required', 'numeric', 'min:0.1', 'max:150'],
             'driver_id' => ['nullable', 'exists:users,id'],
+            'estimated_fare' => ['nullable', 'numeric', 'min:1000'],
         ], [
             'origin_address.required' => 'La dirección de origen es obligatoria.',
             'destination_address.required' => 'La dirección de destino es obligatoria.',
@@ -55,7 +55,8 @@ class DashboardController extends Controller
         // Estimación tarifaria Ubaté: Tarifa base $5,000 + $1,500/km (mínimo $6,000)
         $baseFare = 5000;
         $kmRate = 1500;
-        $estimatedFare = max(6000, round($baseFare + ($distance * $kmRate), -2));
+        $calculatedFare = max(6000, round($baseFare + ($distance * $kmRate), -2));
+        $estimatedFare = !empty($validated['estimated_fare']) ? (float) $validated['estimated_fare'] : $calculatedFare;
 
         Trip::create([
             'passenger_id' => $request->user()->id,
@@ -72,7 +73,7 @@ class DashboardController extends Controller
         ]);
 
         return redirect()->route('pasajero.dashboard')
-            ->with('success', '¡Taxi solicitado con éxito con geolocalización GPS! El servicio ya está visible para el conductor y el administrador.');
+            ->with('success', '¡Ruta registrada exitosamente! Tu solicitud ya está disponible en tiempo real para el Conductor y la Central de Control (Administrador).');
     }
 
     public function cancelTrip(Request $request, Trip $trip): RedirectResponse

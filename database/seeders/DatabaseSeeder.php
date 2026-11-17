@@ -15,8 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Limpiar viajes previos para iniciar en cero sin viajes falsos
+        Trip::query()->delete();
+
         // 1. Administrador del CMS
-        $admin = User::updateOrCreate(
+        User::updateOrCreate(
             ['email' => 'admin@aydtaxi.com'],
             [
                 'name' => 'Administrador General AYD',
@@ -43,7 +46,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // Vehículo asignado al conductor
-        $vehicle = Vehicle::updateOrCreate(
+        Vehicle::updateOrCreate(
             ['license_plate' => 'UBT345'],
             [
                 'driver_id' => $conductor->id,
@@ -56,7 +59,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. Pasajero cliente
-        $pasajero = User::updateOrCreate(
+        User::updateOrCreate(
             ['email' => 'pasajero@aydtaxi.com'],
             [
                 'name' => 'Mariana Gómez (Pasajera)',
@@ -66,25 +69,6 @@ class DatabaseSeeder extends Seeder
                 'latitude' => 5.3080000,
                 'longitude' => -73.8150000,
                 'is_available' => false,
-            ]
-        );
-
-        // Viaje de prueba en Valle de Ubaté
-        Trip::firstOrCreate(
-            [
-                'passenger_id' => $pasajero->id,
-                'origin_address' => 'Carrera 7 # 8-20, Parque Principal de Ubaté',
-            ],
-            [
-                'driver_id' => $conductor->id,
-                'origin_latitude' => 5.3080000,
-                'origin_longitude' => -73.8150000,
-                'destination_address' => 'Hospital El Salvador de Ubaté, Cl. 10',
-                'destination_latitude' => 5.3165000,
-                'destination_longitude' => -73.8210000,
-                'distance_km' => 2.4,
-                'estimated_fare' => 8500.00,
-                'status' => 'en_camino',
             ]
         );
     }
