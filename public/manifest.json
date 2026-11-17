@@ -1,0 +1,17 @@
+{
+    "name": "Ubaté Taxi — Movilidad Provincial",
+    "short_name": "Ubaté Taxi",
+    "description": "Aplicación Móvil Oficial de Taxis y Transporte Veredal en el Valle de Ubaté",
+    "start_url": "/movil",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#0f172a",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        }
+    ]
+}

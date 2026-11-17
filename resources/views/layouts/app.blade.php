@@ -887,6 +887,11 @@
                     <i class="bi bi-shield-lock"></i>
                     <span>Configuración & API Tokens</span>
                 </a>
+
+                <a href="{{ route('movil.index') }}" class="sidebar-link" style="margin-top: 0.35rem; background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; font-weight: 700;">
+                    <i class="bi bi-phone-fill" style="color: #ea580c;"></i>
+                    <span>App Móvil (Celular)</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1047,6 +1052,11 @@
                     <i class="bi bi-journal-text"></i>
                     <span>Historial de Servicios</span>
                 </a>
+
+                <a href="{{ route('movil.index', ['tab' => 'conductor']) }}" class="sidebar-link" style="margin-top: 0.45rem; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 700;">
+                    <i class="bi bi-phone-fill" style="color: #d97706;"></i>
+                    <span>Abrir App Móvil Conductor</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -1144,6 +1154,9 @@
 
                 <nav class="pasajero-nav-links">
                     <a href="#cotizador-pasajero" class="pasajero-nav-link active">Portal Pasajero</a>
+                    <a href="{{ route('movil.index') }}" class="pasajero-nav-link" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 700;">
+                        <i class="bi bi-phone-fill"></i> App Móvil (Celular)
+                    </a>
                     <a href="#cotizador-pasajero" class="pasajero-nav-link">Calculadora Tarifaria</a>
                     <a href="#pin-seguridad" class="pasajero-nav-link">Seguridad & PIN</a>
                     <a href="#historial-pasajero" class="pasajero-nav-link">Estación Conductor</a>

@@ -11,6 +11,18 @@ use Illuminate\Support\Facades\Route;
 | Sistema de Información Geoespacial Distribuido para Taxis en Valle de Ubaté.
 */
 
+// Estado en tiempo real de la API para clientes móviles
+Route::get('/status', function () {
+    return response()->json([
+        'status' => 'online',
+        'app' => 'Ubaté Taxi API Móvil',
+        'active_drivers' => \App\Models\User::where('role', 'conductor')->where('is_available', true)->count(),
+        'active_trips' => \App\Models\Trip::whereIn('status', ['solicitado', 'aceptado', 'en_camino'])->count(),
+        'total_trips' => \App\Models\Trip::count(),
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
+
 // Rutas públicas de autenticación API
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);

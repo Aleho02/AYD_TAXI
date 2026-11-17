@@ -225,6 +225,9 @@
             </nav>
 
             <div style="display: flex; align-items: center; gap: 0.55rem;">
+                <a href="{{ route('movil.index') }}" style="background: #f59e0b; color: #0f172a; font-size: 0.72rem; font-weight: 800; padding: 0.42rem 0.8rem; border-radius: 7px; text-decoration: none;">
+                    <i class="bi bi-phone-fill"></i> App Móvil (Celular)
+                </a>
                 <a href="tel:123" style="background: #dc2626; color: #fff; font-size: 0.7rem; font-weight: 800; padding: 0.42rem 0.75rem; border-radius: 7px; text-decoration: none;">
                     🚨 SOS 123 / 855-3000
                 </a>
