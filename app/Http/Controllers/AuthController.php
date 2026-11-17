@@ -199,6 +199,10 @@ class AuthController extends Controller
 
     private function redirectByRole(User $user): RedirectResponse
     {
+        if (str_contains(request()->userAgent() ?? '', 'UbateTaxiAndroid')) {
+            return redirect()->route('movil.index');
+        }
+
         if ($user->isAdmin()) {
             return redirect()->route('admin.dashboard');
         } elseif ($user->isConductor()) {

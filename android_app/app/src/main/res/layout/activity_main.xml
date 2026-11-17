@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0F172A">
+
+    <!-- Barra nativa superior de estado de conexión API y selector rápido de IP -->
+    <LinearLayout
+        android:id="@+id/apiStatusBar"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:background="#0F172A"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <TextView
+            android:id="@+id/tvApiStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="● Conectando con API Ubaté Taxi..."
+            android:textColor="#86EFAC"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnConfigIp"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:backgroundTint="#1E293B"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="Cambiar IP"
+            android:textAllCaps="false"
+            android:textColor="#FBBF24"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Barra de progreso de carga -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:progressTint="#F59E0B"
+        android:visibility="gone" />
+
+    <!-- Contenedor principal WebView con soporte GPS y API -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>
