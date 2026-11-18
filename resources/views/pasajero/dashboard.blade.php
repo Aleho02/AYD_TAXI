@@ -3,10 +3,6 @@
 @section('title', 'Portal Pasajero - TaxiUbaté Veredal & Urbano')
 
 @section('content')
-<!-- Leaflet CSS & JS para selección de ruta real en el mapa -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
-
 <style>
     .pasajero-subbar {
         background: #ffffff;
@@ -251,20 +247,25 @@
 
                 <!-- Mapa Interactivo Leaflet para elegir Origen y Destino en Ubaté -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.4rem;">
-                    <div style="display: flex; gap: 0.4rem;">
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                         <button type="button" id="btnModeOrigin" class="freq-pill" style="background: #0f172a; color: #fff;" onclick="setMapMode('origin')">
-                            1. Clic en Mapa: Origen (A)
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:4px;"></span> 1. Origen (A)
                         </button>
                         <button type="button" id="btnModeDest" class="freq-pill" onclick="setMapMode('destination')">
-                            2. Clic en Mapa: Destino (B)
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px;"></span> 2. Destino (B)
+                        </button>
+                        <button type="button" class="freq-pill" onclick="centerMapOnUbate()" title="Centrar mapa en el Parque Principal">
+                            <i class="bi bi-geo-alt"></i> Centrar Ubaté
                         </button>
                     </div>
-                    <button type="button" class="freq-pill" onclick="useMyGPSLocation()">
-                        <i class="bi bi-crosshair"></i> Usar mi GPS
+                    <button type="button" id="btnUseGps" class="freq-pill" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700;" onclick="useMyGPSLocation()">
+                        <i class="bi bi-crosshair"></i> <span id="btnGpsText">Mi ubicación GPS</span>
                     </button>
                 </div>
 
-                <div id="ubateMap" style="width: 100%; height: 220px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 0.9rem; z-index: 1;"></div>
+                <div id="gpsStatusNotice" style="display: none; padding: 0.45rem 0.75rem; border-radius: 8px; font-size: 0.72rem; margin-bottom: 0.55rem; font-weight: 600;"></div>
+
+                <div id="ubateMap" style="width: 100%; height: 260px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 0.9rem; z-index: 1;"></div>
 
                 <!-- Formulario que Registra el Viaje en la Base de Datos para Conductor y Administrador -->
                 <form action="{{ route('pasajero.trips.store') }}" method="POST" id="pasajeroTripForm">
@@ -565,6 +566,7 @@
 <script>
     let currentMapMode = 'destination';
 
+    // Inicializar mapa centrado en el Parque Principal de Ubaté
     const map = L.map('ubateMap').setView([5.3110, -73.8165], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
@@ -573,21 +575,67 @@
 
     const originIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#10b981;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">A</div>',
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
+        html: '<div style="background:#10b981;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.4);">A</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
     });
 
     const destIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#ef4444;color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">B</div>',
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
+        html: '<div style="background:#ef4444;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.4);">B</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
     });
 
     let originMarker = L.marker([5.3080, -73.8150], { draggable: true, icon: originIcon }).addTo(map);
     let destMarker = L.marker([5.3165, -73.8210], { draggable: true, icon: destIcon }).addTo(map);
-    let routeLine = L.polyline([[5.3080, -73.8150], [5.3165, -73.8210]], { color: '#0f172a', weight: 4 }).addTo(map);
+    let routeLine = L.polyline([[5.3080, -73.8150], [5.3165, -73.8210]], { color: '#0f172a', weight: 4.5, opacity: 0.85 }).addTo(map);
+
+    // Capa de taxis disponibles en tiempo real
+    const driversLayer = L.layerGroup().addTo(map);
+    const availableDriversData = @json($availableDrivers);
+
+    function renderDriversOnMap(drivers) {
+        driversLayer.clearLayers();
+        if (!drivers || !drivers.length) return;
+
+        drivers.forEach(drv => {
+            if (!drv.latitude || !drv.longitude) return;
+            const taxiIcon = L.divIcon({
+                className: '',
+                html: `<div style="background:#f59e0b;color:#0f172a;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);font-size:14px;cursor:pointer;" title="${drv.name}">
+                        <i class="bi bi-taxi-front-fill"></i>
+                       </div>`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+
+            const marker = L.marker([parseFloat(drv.latitude), parseFloat(drv.longitude)], { icon: taxiIcon });
+            const plate = drv.vehicle ? drv.vehicle.license_plate : 'En servicio';
+            marker.bindPopup(`
+                <div style="font-family:'Inter',sans-serif;font-size:0.75rem;line-height:1.4;">
+                    <strong style="color:#0f172a;font-size:0.82rem;">🚖 ${drv.name}</strong><br>
+                    <span style="color:#047857;font-weight:700;">● Conductor Disponible</span><br>
+                    Placa: <strong>${plate}</strong><br>
+                    ${drv.phone ? 'Tel: ' + drv.phone : ''}
+                </div>
+            `);
+            driversLayer.addLayer(marker);
+        });
+    }
+
+    renderDriversOnMap(availableDriversData);
+
+    // Refrescar posiciones de conductores cada 15 segundos
+    setInterval(async () => {
+        try {
+            const res = await fetch('/geo/drivers');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.drivers) renderDriversOnMap(data.drivers);
+            }
+        } catch (e) {}
+    }, 15000);
 
     function setMapMode(mode) {
         currentMapMode = mode;
@@ -595,6 +643,10 @@
         document.getElementById('btnModeOrigin').style.color = mode === 'origin' ? '#fff' : '#334155';
         document.getElementById('btnModeDest').style.background = mode === 'destination' ? '#0f172a' : '#f8fafc';
         document.getElementById('btnModeDest').style.color = mode === 'destination' ? '#fff' : '#334155';
+    }
+
+    function centerMapOnUbate() {
+        map.setView([5.3110, -73.8165], 14);
     }
 
     function haversineKm(lat1, lon1, lat2, lon2) {
@@ -609,15 +661,19 @@
 
     async function reverseGeocode(lat, lng, inputId) {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`);
-            const data = await res.json();
-            if (data && data.display_name) {
-                document.getElementById(inputId).value = data.display_name.split(',').slice(0, 3).join(',');
+            const res = await fetch(`/geo/reverse?latitude=${lat}&longitude=${lng}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.address) {
+                    document.getElementById(inputId).value = data.address;
+                    return;
+                }
             }
         } catch (e) {}
+        document.getElementById(inputId).value = `Ubicación (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
     }
 
-    function syncMarkersAndDistance() {
+    async function syncMarkersAndDistance() {
         const o = originMarker.getLatLng();
         const d = destMarker.getLatLng();
         document.getElementById('origin_latitude').value = o.lat.toFixed(7);
@@ -625,8 +681,25 @@
         document.getElementById('destination_latitude').value = d.lat.toFixed(7);
         document.getElementById('destination_longitude').value = d.lng.toFixed(7);
         document.getElementById('originCoordsText').textContent = `${o.lat.toFixed(4)}, ${o.lng.toFixed(4)}`;
-        routeLine.setLatLngs([o, d]);
 
+        // Trazar ruta real por calles con OSRM o Haversine como respaldo
+        try {
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.routes && data.routes[0]) {
+                    const r = data.routes[0];
+                    const coords = r.geometry.coordinates.map(c => [c[1], c[0]]);
+                    routeLine.setLatLngs(coords);
+                    const km = Math.max(0.5, (r.distance / 1000));
+                    document.getElementById('distance_km').value = km.toFixed(2);
+                    recalculateRealFare();
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        routeLine.setLatLngs([o, d]);
         const dist = Math.max(0.5, haversineKm(o.lat, o.lng, d.lat, d.lng) * 1.25);
         document.getElementById('distance_km').value = dist.toFixed(2);
         recalculateRealFare();
@@ -663,21 +736,68 @@
         document.getElementById('destination_longitude').value = lng.toFixed(7);
         document.getElementById('distance_km').value = km;
         document.getElementById('sectorBadge').textContent = sector;
-        routeLine.setLatLngs([originMarker.getLatLng(), [lat, lng]]);
         map.panTo([lat, lng]);
-        recalculateRealFare();
+        syncMarkersAndDistance();
+    }
+
+    function showGpsNotice(text, bg, color, border) {
+        const notice = document.getElementById('gpsStatusNotice');
+        if (!notice) return;
+        notice.style.display = 'block';
+        notice.style.background = bg;
+        notice.style.color = color;
+        notice.style.border = `1px solid ${border}`;
+        notice.textContent = text;
+        setTimeout(() => { notice.style.display = 'none'; }, 7000);
     }
 
     function useMyGPSLocation() {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(function(pos) {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            originMarker.setLatLng([lat, lng]);
-            map.setView([lat, lng], 15);
-            reverseGeocode(lat, lng, 'origin_address');
-            syncMarkersAndDistance();
-        });
+        const btn = document.getElementById('btnUseGps');
+        const txt = document.getElementById('btnGpsText');
+
+        if (!navigator.geolocation) {
+            showGpsNotice('Tu navegador no cuenta con soporte para GPS. Puedes hacer clic en el mapa para fijar tu origen.', '#fef2f2', '#b91c1c', '#fecaca');
+            return;
+        }
+
+        txt.textContent = 'Obteniendo GPS...';
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                btn.disabled = false;
+                txt.textContent = 'GPS Actualizado';
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const accuracy = Math.round(pos.coords.accuracy || 0);
+
+                originMarker.setLatLng([lat, lng]);
+                map.setView([lat, lng], 15);
+                reverseGeocode(lat, lng, 'origin_address');
+                syncMarkersAndDistance();
+
+                showGpsNotice(`✓ Ubicación GPS detectada (Precisión: ±${accuracy}m). Marcador A actualizado.`, '#ecfdf5', '#047857', '#a7f3d0');
+                setTimeout(() => { txt.textContent = 'Mi ubicación GPS'; }, 4000);
+            },
+            function(err) {
+                btn.disabled = false;
+                txt.textContent = 'Mi ubicación GPS';
+                let msg = 'No se pudo obtener la posición GPS.';
+                if (err.code === 1) {
+                    msg = 'Permiso GPS no concedido en el navegador. Haz clic en "1. Origen (A)" y selecciona tu ubicación en el mapa de Ubaté.';
+                } else if (err.code === 2) {
+                    msg = 'Señal satelital no disponible actualmente. Puedes arrastrar el marcador verde en el mapa.';
+                } else if (err.code === 3) {
+                    msg = 'Tiempo de espera GPS agotado. Puedes marcar tu ubicación manualmente en el mapa.';
+                }
+                showGpsNotice(msg, '#fffbeb', '#b45309', '#fde68a');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
     }
 
     function recalculateRealFare() {

@@ -14,6 +14,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+    <!-- Leaflet Maps CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 
     <style>
         * {
@@ -323,91 +326,44 @@
          PESTAÑA 1: PEDIR TAXI (IMAGEN 1)
          ========================================================================= -->
     <div id="tab-pedir" class="mob-tab-pane {{ $defaultTab === 'pedir' ? 'active' : '' }}">
-        <!-- Mapa Superior Interactivo -->
-        <div style="position: relative; height: 225px; background: linear-gradient(145deg, #eef2ff 0%, #f1f5f9 55%, #fef9c3 100%); border-bottom: 1px solid #e2e8f0; overflow: hidden;">
-            <!-- Cuadrícula Urbana de Ubaté -->
-            <svg viewBox="0 0 400 225" style="width: 100%; height: 100%;">
-                <g fill="#ffffff" stroke="#e2e8f0" stroke-width="1">
-                    <rect x="20" y="20" width="85" height="55" rx="6" />
-                    <rect x="115" y="20" width="85" height="55" rx="6" />
-                    <rect x="210" y="20" width="85" height="55" rx="6" />
-                    <rect x="20" y="85" width="85" height="55" rx="6" />
-                    <rect x="115" y="85" width="85" height="55" rx="6" fill="#dcfce7" />
-                    <rect x="210" y="85" width="85" height="55" rx="6" />
-                    <rect x="115" y="150" width="85" height="55" rx="6" fill="#fef3c7" />
-                </g>
-                <!-- Ruta Naranja Parque Principal -> Destino -->
-                <path d="M 160 110 L 195 110 L 195 145 L 305 145" fill="none" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+        <!-- Mapa Superior Interactivo Leaflet con GPS -->
+        <div style="position: relative; height: 235px; border-bottom: 1px solid #e2e8f0; overflow: hidden; background: #e2e8f0;">
+            <div id="mobLeafletMap" style="width: 100%; height: 100%; z-index: 1;"></div>
 
             <!-- Píldora Taxis Activos en BD -->
-            <div style="position: absolute; top: 12px; left: 12px; background: #ffffff; padding: 0.32rem 0.7rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 0.35rem;">
+            <div style="position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.95); padding: 0.3rem 0.65rem; border-radius: 99px; font-size: 0.72rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 0.35rem; z-index: 1000;">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background: #047857;"></span>
-                <span>{{ $availableDrivers->count() }} taxis activos en Ubaté</span>
+                <span>{{ $availableDrivers->count() }} taxis activos</span>
             </div>
 
             <!-- Botón Centrar GPS -->
-            <button type="button" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer;">
+            <button type="button" id="btnMobGps" onclick="useMobGPS()" style="position: absolute; top: 10px; right: 10px; width: 38px; height: 38px; border-radius: 10px; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.18); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #047857; z-index: 1000;" title="Obtener mi GPS">
                 <i class="bi bi-crosshair"></i>
             </button>
 
-            <!-- Etiquetas del Mapa -->
-            <div style="position: absolute; top: 48px; left: 32%; background: #ffffff; padding: 0.18rem 0.55rem; border-radius: 99px; font-size: 0.65rem; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,0.08);">
-                ⛪ Basílica Menor
-            </div>
-
-            <div style="position: absolute; top: 82px; left: 29%; background: #86efac; color: #064e3b; padding: 0.18rem 0.55rem; border-radius: 99px; font-size: 0.65rem; font-weight: 800;">
-                🌲 Parque Central
-            </div>
-
-            <!-- Marcador Tú Aquí -->
-            <div style="position: absolute; top: 102px; left: 35%; text-align: center;">
-                <div style="width: 24px; height: 24px; border-radius: 50%; background: #92400e; color: #fff; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 0.68rem;">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <div style="background: #0f172a; color: #fff; font-size: 0.6rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; margin-top: 2px;">
-                    Tú aquí
-                </div>
-            </div>
-
-            <!-- Marcador Taxi Real de BD -->
-            @if($availableDrivers->first())
-                <div style="position: absolute; top: 96px; left: 50%; text-align: center;">
-                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #f59e0b; color: #0f172a; display: inline-flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 0.75rem;">
-                        <i class="bi bi-taxi-front-fill"></i>
-                    </div>
-                    <div style="background: #0f172a; color: #fff; font-size: 0.6rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 4px; margin-top: 2px;">
-                        {{ $availableDrivers->first()->vehicle ? $availableDrivers->first()->vehicle->license_plate : 'ACTIVO' }}
-                    </div>
-                </div>
-            @endif
-
-            <!-- Marcador Destino -->
-            <div style="position: absolute; top: 126px; right: 12%; background: #ffffff; padding: 0.18rem 0.55rem; border-radius: 99px; font-size: 0.65rem; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                🏥 <span id="mapDestPinLabel">Hospital El Salvador</span>
-            </div>
-
             <!-- Accesos Rápidos en la Base del Mapa -->
-            <div style="position: absolute; bottom: 8px; left: 10px; right: 10px; display: flex; gap: 0.4rem; overflow-x: auto;">
-                <button type="button" onclick="setMobRoute('Plaza de Mercado San José', 2.1, 6500)" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 99px; padding: 0.28rem 0.65rem; font-size: 0.68rem; font-weight: 700; white-space: nowrap; cursor: pointer;">
+            <div style="position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; gap: 0.35rem; overflow-x: auto; z-index: 1000; padding-bottom: 2px;">
+                <button type="button" onclick="setMobRoute('Plaza de Mercado San José', 5.3095, -73.8130, 2.1, 6500)" style="background: rgba(255,255,255,0.95); border: 1px solid #cbd5e1; border-radius: 99px; padding: 0.25rem 0.6rem; font-size: 0.66rem; font-weight: 700; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     🏪 Plaza de Mercado
                 </button>
-                <button type="button" onclick="setMobRoute('Vereda Sucunchoque - Sector El Molino', 4.2, 12000)" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 99px; padding: 0.28rem 0.65rem; font-size: 0.68rem; font-weight: 700; white-space: nowrap; cursor: pointer;">
+                <button type="button" onclick="setMobRoute('Vereda Sucunchoque - El Molino', 5.3280, -73.8350, 4.2, 12000)" style="background: rgba(255,255,255,0.95); border: 1px solid #cbd5e1; border-radius: 99px; padding: 0.25rem 0.6rem; font-size: 0.66rem; font-weight: 700; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     ⛰️ Sucunchoque
                 </button>
-                <button type="button" onclick="setMobRoute('Terminal de Transportes Ubaté', 1.8, 6500)" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 99px; padding: 0.28rem 0.65rem; font-size: 0.68rem; font-weight: 700; white-space: nowrap; cursor: pointer;">
+                <button type="button" onclick="setMobRoute('Terminal de Transportes Ubaté', 5.3050, -73.8190, 1.8, 6500)" style="background: rgba(255,255,255,0.95); border: 1px solid #cbd5e1; border-radius: 99px; padding: 0.25rem 0.6rem; font-size: 0.66rem; font-weight: 700; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     🏢 Terminal Ubaté
                 </button>
             </div>
         </div>
 
+        <div id="mobGpsToast" style="display: none; margin: 0.45rem 0.95rem 0; padding: 0.4rem 0.75rem; border-radius: 8px; font-size: 0.72rem; font-weight: 600;"></div>
+
         <!-- FORMULARIO REAL DE SOLICITUD DESDE CELULAR -->
         <form action="{{ route('movil.trips.store') }}" method="POST" id="mobRequestForm">
             @csrf
-            <input type="hidden" name="origin_latitude" value="5.3080000">
-            <input type="hidden" name="origin_longitude" value="-73.8150000">
-            <input type="hidden" name="destination_latitude" value="5.3165000">
-            <input type="hidden" name="destination_longitude" value="-73.8210000">
+            <input type="hidden" name="origin_latitude" id="mob_origin_lat" value="5.3080000">
+            <input type="hidden" name="origin_longitude" id="mob_origin_lng" value="-73.8150000">
+            <input type="hidden" name="destination_latitude" id="mob_dest_lat" value="5.3165000">
+            <input type="hidden" name="destination_longitude" id="mob_dest_lng" value="-73.8210000">
             <input type="hidden" name="distance_km" id="mobDistanceInput" value="2.4">
             <input type="hidden" name="estimated_fare" id="mobFareInput" value="6500">
 
@@ -1224,11 +1180,183 @@
         }
     }
 
-    function setMobRoute(dest, km, fare) {
-        document.getElementById('mobDestInput').value = dest;
-        document.getElementById('mapDestPinLabel').textContent = dest.split(' ')[0] + ' ' + (dest.split(' ')[1] || '');
-        updateMobNumbers(km, fare);
+    // Inicializar Mapa Leaflet en la App Móvil
+    let mobMap = null;
+    let mobOriginMarker = null;
+    let mobDestMarker = null;
+    let mobRouteLine = null;
+    const availableDriversMob = @json($availableDrivers);
+
+    function initMobMap() {
+        if (mobMap || !document.getElementById('mobLeafletMap')) return;
+
+        mobMap = L.map('mobLeafletMap', { zoomControl: false }).setView([5.3110, -73.8165], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OSM Ubaté'
+        }).addTo(mobMap);
+
+        const iconA = L.divIcon({
+            className: '',
+            html: '<div style="background:#10b981;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:11px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">A</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        const iconB = L.divIcon({
+            className: '',
+            html: '<div style="background:#ef4444;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:11px;box-shadow:0 2px 5px rgba(0,0,0,0.4);">B</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+        });
+
+        mobOriginMarker = L.marker([5.3080, -73.8150], { draggable: true, icon: iconA }).addTo(mobMap);
+        mobDestMarker = L.marker([5.3165, -73.8210], { draggable: true, icon: iconB }).addTo(mobMap);
+        mobRouteLine = L.polyline([[5.3080, -73.8150], [5.3165, -73.8210]], { color: '#f59e0b', weight: 4.5, opacity: 0.9 }).addTo(mobMap);
+
+        // Renderizar taxis disponibles
+        if (availableDriversMob && availableDriversMob.length) {
+            availableDriversMob.forEach(d => {
+                if (!d.latitude || !d.longitude) return;
+                const taxiIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="background:#f59e0b;color:#0f172a;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,0.3);font-size:12px;">
+                            <i class="bi bi-taxi-front-fill"></i>
+                           </div>`,
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                });
+                const m = L.marker([parseFloat(d.latitude), parseFloat(d.longitude)], { icon: taxiIcon });
+                m.bindPopup(`<b>${d.name}</b><br>Placa: ${d.vehicle ? d.vehicle.license_plate : 'En servicio'}`);
+                mobMap.addLayer(m);
+            });
+        }
+
+        mobOriginMarker.on('dragend', () => {
+            const p = mobOriginMarker.getLatLng();
+            reverseGeocodeMob(p.lat, p.lng, 'mobOriginInput');
+            syncMobDistance();
+        });
+
+        mobDestMarker.on('dragend', () => {
+            const p = mobDestMarker.getLatLng();
+            reverseGeocodeMob(p.lat, p.lng, 'mobDestInput');
+            syncMobDistance();
+        });
+
+        mobMap.on('click', (e) => {
+            mobDestMarker.setLatLng(e.latlng);
+            reverseGeocodeMob(e.latlng.lat, e.latlng.lng, 'mobDestInput');
+            syncMobDistance();
+        });
     }
+
+    async function reverseGeocodeMob(lat, lng, inputId) {
+        try {
+            const res = await fetch(`/geo/reverse?latitude=${lat}&longitude=${lng}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.address) {
+                    document.getElementById(inputId).value = data.address;
+                    return;
+                }
+            }
+        } catch (e) {}
+    }
+
+    function syncMobDistance() {
+        const o = mobOriginMarker.getLatLng();
+        const d = mobDestMarker.getLatLng();
+
+        document.getElementById('mob_origin_lat').value = o.lat.toFixed(7);
+        document.getElementById('mob_origin_lng').value = o.lng.toFixed(7);
+        document.getElementById('mob_dest_lat').value = d.lat.toFixed(7);
+        document.getElementById('mob_dest_lng').value = d.lng.toFixed(7);
+
+        mobRouteLine.setLatLngs([o, d]);
+
+        const R = 6371;
+        const dLat = (d.lat - o.lat) * Math.PI / 180;
+        const dLon = (d.lng - o.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(o.lat*Math.PI/180)*Math.cos(d.lat*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        const dist = Math.max(0.5, R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.25);
+
+        const base = 5000;
+        const distCost = Math.round((dist * 1500) / 100) * 100;
+        const fare = Math.max(6000, base + distCost);
+
+        updateMobNumbers(dist, fare);
+    }
+
+    function useMobGPS() {
+        const btn = document.getElementById('btnMobGps');
+        const toast = document.getElementById('mobGpsToast');
+
+        if (!navigator.geolocation) {
+            showMobToast('GPS no soportado en tu dispositivo.', '#fef2f2', '#b91c1c');
+            return;
+        }
+
+        btn.style.opacity = '0.5';
+        showMobToast('Capturando señal GPS satelital...', '#eff6ff', '#1d4ed8');
+
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                btn.style.opacity = '1';
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const acc = Math.round(pos.coords.accuracy || 0);
+
+                if (mobOriginMarker && mobMap) {
+                    mobOriginMarker.setLatLng([lat, lng]);
+                    mobMap.setView([lat, lng], 15);
+                    reverseGeocodeMob(lat, lng, 'mobOriginInput');
+                    syncMobDistance();
+                }
+
+                showMobToast(`✓ GPS fijado (Precisión: ±${acc}m)`, '#ecfdf5', '#047857');
+            },
+            function(err) {
+                btn.style.opacity = '1';
+                let msg = 'Error de GPS.';
+                if (err.code === 1) msg = 'Permiso GPS denegado. Permite la ubicación en el navegador.';
+                else if (err.code === 2) msg = 'Señal GPS no disponible.';
+                else if (err.code === 3) msg = 'Tiempo agotado al buscar GPS.';
+                showMobToast(msg, '#fffbeb', '#b45309');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function showMobToast(text, bg, color) {
+        const toast = document.getElementById('mobGpsToast');
+        if (!toast) return;
+        toast.style.display = 'block';
+        toast.style.background = bg;
+        toast.style.color = color;
+        toast.textContent = text;
+        setTimeout(() => { toast.style.display = 'none'; }, 5000);
+    }
+
+    function setMobRoute(dest, lat, lng, km, fare) {
+        document.getElementById('mobDestInput').value = dest;
+        if (mobDestMarker && mobMap) {
+            mobDestMarker.setLatLng([lat, lng]);
+            mobMap.panTo([lat, lng]);
+            syncMobDistance();
+        } else {
+            updateMobNumbers(km, fare);
+        }
+    }
+
+    // Inicializar mapa al cargar pestaña
+    document.addEventListener('DOMContentLoaded', () => {
+        initMobMap();
+    });
 
     function selectMobService(card, km, fare) {
         document.querySelectorAll('.service-option-card').forEach(c => c.classList.remove('selected'));

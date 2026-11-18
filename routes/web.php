@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\FleetController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Conductor\DashboardController as ConductorDashboardController;
+use App\Http\Controllers\GeolocationController;
 use App\Http\Controllers\MobileAppController;
 use App\Http\Controllers\Pasajero\DashboardController as PasajeroDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {
 
+    // Servicios Geoespaciales y Geolocalización en Tiempo Real
+    Route::prefix('geo')->name('geo.')->group(function () {
+        Route::get('/reverse', [GeolocationController::class, 'reverseGeocode'])->name('reverse');
+        Route::get('/drivers', [GeolocationController::class, 'availableDrivers'])->name('drivers');
+        Route::get('/fleet', [GeolocationController::class, 'fleetStatus'])->name('fleet');
+    });
+
     // App Móvil Unificada (Para Celulares Android / iOS y Navegador Móvil)
     Route::prefix('movil')->name('movil.')->group(function () {
         Route::get('/', [MobileAppController::class, 'index'])->name('index');
@@ -39,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/trips/{trip}/accept', [MobileAppController::class, 'acceptTrip'])->name('trips.accept');
         Route::patch('/trips/{trip}/status', [MobileAppController::class, 'updateTripStatus'])->name('trips.status');
         Route::patch('/availability', [MobileAppController::class, 'toggleAvailability'])->name('availability');
+        Route::patch('/location', [MobileAppController::class, 'updateLocation'])->name('location');
     });
 
     // Panel Web CMS - Solo Administrador
@@ -61,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/availability', [ConductorDashboardController::class, 'toggleAvailability'])->name('availability');
         Route::patch('/trips/{trip}/accept', [ConductorDashboardController::class, 'acceptTrip'])->name('trips.accept');
         Route::patch('/trips/{trip}/status', [ConductorDashboardController::class, 'updateTripStatus'])->name('trips.status');
+        Route::patch('/location', [ConductorDashboardController::class, 'updateLocation'])->name('location');
     });
 
     // Panel Pasajero

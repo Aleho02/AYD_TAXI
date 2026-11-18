@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Conductor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Trip;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -79,5 +80,32 @@ class DashboardController extends Controller
 
         return redirect()->route('conductor.dashboard')
             ->with('success', 'Estado del servicio actualizado correctamente.');
+    }
+
+    /**
+     * Actualizar ubicación GPS del conductor desde el panel web o móvil
+     */
+    public function updateLocation(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'is_available' => ['nullable', 'boolean'],
+        ]);
+
+        $driver = $request->user();
+        $driver->update([
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
+            'is_available' => $request->has('is_available') ? $validated['is_available'] : $driver->is_available,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ubicación GPS transmitida con éxito.',
+            'latitude' => (float) $driver->latitude,
+            'longitude' => (float) $driver->longitude,
+            'is_available' => (bool) $driver->is_available,
+        ]);
     }
 }

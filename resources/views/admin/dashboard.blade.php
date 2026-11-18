@@ -448,57 +448,16 @@
             </button>
         </div>
 
-        <div class="gis-map-viewport">
-            <div class="gis-grid-overlay"></div>
-
-            <!-- Vectores Viales Ubaté -->
-            <svg viewBox="0 0 800 430" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%;">
-                <g stroke="#cbd5e1" stroke-width="1.2" fill="rgba(255,255,255,0.35)">
-                    <rect x="420" y="170" width="38" height="32" rx="2" />
-                    <rect x="462" y="170" width="38" height="32" rx="2" />
-                    <rect x="504" y="170" width="38" height="32" rx="2" />
-                    <rect x="420" y="206" width="38" height="32" rx="2" />
-                    <rect x="462" y="206" width="38" height="32" rx="2" />
-                    <rect x="504" y="206" width="38" height="32" rx="2" />
-                </g>
-                <path d="M 140 85 Q 290 125 460 205" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="4 4" />
-                <path d="M 485 198 L 760 275" fill="none" stroke="#10b981" stroke-width="2.2" />
-                <path d="M 275 430 L 465 215 L 775 110" fill="none" stroke="#f97316" stroke-width="3.5" stroke-opacity="0.8" />
-            </svg>
-
-            <div class="map-road-label" style="top: 13%; left: 12%;">Vía Villa de San Diego de Ubaté</div>
-            <div class="map-road-label" style="top: 28%; left: 26%;">Vía Carmen de Carupa</div>
-            <div class="map-road-label" style="bottom: 18%; left: 27%;">Sutatausa (Vía Bogotá)</div>
-            <div class="map-center-tag">UBATÉ (CENTRO)</div>
-
-            <!-- Marcadores 100% Reales de Conductores Registrados en BD -->
-            @forelse($drivers as $index => $driver)
-                <div class="map-taxi-marker" style="top: {{ 25 + (($index * 17) % 50) }}%; left: {{ 30 + (($index * 21) % 50) }}%;" title="Conductor: {{ $driver->name }}">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ $driver->is_available ? '#10b981' : '#ef4444' }};"></span>
-                    <span>{{ $driver->vehicle ? $driver->vehicle->license_plate : $driver->name }}</span>
-                </div>
-            @empty
-                <div style="position: absolute; top: 58%; left: 52%; transform: translate(-50%, -50%); background: rgba(255,255,255,0.94); border: 1px solid #cbd5e1; padding: 0.45rem 0.85rem; border-radius: 8px; font-size: 0.74rem; color: #64748b; font-weight: 600;">
-                    0 conductores registrados en el mapa
-                </div>
-            @endforelse
-
-            <!-- Marcadores Reales de Solicitudes de Viajes Activos -->
-            @foreach($pendingTrips->take(4) as $tIdx => $pTrip)
-                <div class="map-taxi-marker" style="top: {{ 32 + (($tIdx * 14) % 45) }}%; left: {{ 42 + (($tIdx * 16) % 40) }}%; border-color: #f97316; background: #fff7ed;" title="Viaje #TX-{{ $pTrip->id }}: {{ $pTrip->origin_address }} → {{ $pTrip->destination_address }}">
-                    <i class="bi bi-geo-alt-fill" style="color: #ea580c;"></i>
-                    <span>#TX-{{ $pTrip->id }} ({{ $pTrip->distance_km }} km)</span>
-                </div>
-            @endforeach
-
-            <div class="gis-bottom-bar">
-                <div style="display: flex; align-items: center; gap: 0.85rem;">
+        <div style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+            <div id="adminGisMap" style="width: 100%; height: 420px; z-index: 1;"></div>
+            <div class="gis-bottom-bar" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: rgba(15, 23, 42, 0.9); color: #fff; padding: 0.5rem 1rem; backdrop-filter: blur(4px);">
+                <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.73rem;">
                     <span><span style="color: #10b981;">●</span> Disponible ({{ $stats['active_drivers'] }})</span>
                     <span><span style="color: #d97706;">●</span> En Carrera ({{ $stats['in_progress_trips'] }})</span>
                     <span><span style="color: #2563eb;">●</span> Solicitados ({{ $stats['requested_trips'] }})</span>
                 </div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #64748b;">
-                    Total viajes BD: {{ $stats['total_trips'] }}
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #94a3b8;">
+                    Monitoreo Satelital en Tiempo Real • Valle de Ubaté
                 </div>
             </div>
         </div>
@@ -678,4 +637,111 @@
         @endforelse
     </div>
 </div>
+
+<script>
+    const adminMap = L.map('adminGisMap').setView([5.3110, -73.8165], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap - Centro de Despacho Ubaté'
+    }).addTo(adminMap);
+
+    const driversGroup = L.layerGroup().addTo(adminMap);
+    const tripsGroup = L.layerGroup().addTo(adminMap);
+
+    function updateFleetOnMap(drivers, activeTrips) {
+        driversGroup.clearLayers();
+        tripsGroup.clearLayers();
+
+        // 1. Renderizar conductores con coordenadas GPS reales
+        if (drivers && drivers.length) {
+            drivers.forEach(d => {
+                if (!d.latitude || !d.longitude) return;
+
+                const bg = d.is_available ? '#10b981' : '#64748b';
+                const taxiIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="background:${bg};color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.35);font-size:15px;cursor:pointer;">
+                            <i class="bi bi-taxi-front-fill"></i>
+                           </div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const m = L.marker([parseFloat(d.latitude), parseFloat(d.longitude)], { icon: taxiIcon });
+                const plate = d.vehicle ? d.vehicle.license_plate : 'Sin placa';
+                m.bindPopup(`
+                    <div style="font-family:'Inter',sans-serif;font-size:0.75rem;line-height:1.4;">
+                        <strong style="font-size:0.85rem;color:#0f172a;">🚖 ${d.name}</strong><br>
+                        <span style="color:${d.is_available ? '#047857' : '#64748b'};font-weight:700;">● ${d.is_available ? 'Disponible' : 'En Pausa / Ocupado'}</span><br>
+                        Placa: <strong>${plate}</strong><br>
+                        ${d.vehicle ? 'Vehículo: ' + d.vehicle.brand + ' ' + d.vehicle.model : ''}<br>
+                        ${d.phone ? 'Tel: ' + d.phone : ''}<br>
+                        <span style="color:#64748b;font-size:0.68rem;">GPS: ${parseFloat(d.latitude).toFixed(4)}, ${parseFloat(d.longitude).toFixed(4)}</span>
+                    </div>
+                `);
+                driversGroup.addLayer(m);
+            });
+        }
+
+        // 2. Renderizar viajes activos
+        if (activeTrips && activeTrips.length) {
+            activeTrips.forEach(t => {
+                if (!t.origin_latitude || !t.destination_latitude) return;
+
+                const oLat = parseFloat(t.origin_latitude);
+                const oLng = parseFloat(t.origin_longitude);
+                const dLat = parseFloat(t.destination_latitude);
+                const dLng = parseFloat(t.destination_longitude);
+
+                const pIcon = L.divIcon({
+                    className: '',
+                    html: '<div style="background:#10b981;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:11px;">A</div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const dIcon = L.divIcon({
+                    className: '',
+                    html: '<div style="background:#ef4444;color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:11px;">B</div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const mO = L.marker([oLat, oLng], { icon: pIcon });
+                mO.bindPopup(`<b>Viaje #TX-${t.id} (Origen)</b><br>${t.origin_address}<br>Pasajero: ${t.passenger ? t.passenger.name : 'N/A'}`);
+                tripsGroup.addLayer(mO);
+
+                const mD = L.marker([dLat, dLng], { icon: dIcon });
+                mD.bindPopup(`<b>Viaje #TX-${t.id} (Destino)</b><br>${t.destination_address}`);
+                tripsGroup.addLayer(mD);
+
+                const line = L.polyline([[oLat, oLng], [dLat, dLng]], {
+                    color: t.status === 'en_camino' ? '#d97706' : '#2563eb',
+                    weight: 3.5,
+                    dashArray: '5, 5',
+                    opacity: 0.8
+                });
+                tripsGroup.addLayer(line);
+            });
+        }
+    }
+
+    async function refreshFleetMap() {
+        try {
+            const res = await fetch('/geo/fleet');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'success') {
+                    updateFleetOnMap(data.drivers, data.active_trips);
+                }
+            }
+        } catch (e) {}
+    }
+
+    // Carga inicial
+    refreshFleetMap();
+
+    // Actualización continua cada 10 segundos
+    setInterval(refreshFleetMap, 10000);
+</script>
 @endsection

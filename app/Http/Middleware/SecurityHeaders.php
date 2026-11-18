@@ -26,8 +26,8 @@ class SecurityHeaders
         // Política de referer estricta
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-        // Restricción de permisos del navegador
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+        // Restricción de permisos del navegador (permitir geolocalización para GPS en tiempo real)
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=*');
 
         // Content Security Policy (Z01): solo se permiten los orígenes que usa el CMS
         $response->headers->set('Content-Security-Policy', implode('; ', [

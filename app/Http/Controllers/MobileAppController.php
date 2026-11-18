@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Trip;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -163,5 +164,28 @@ class MobileAppController extends Controller
 
         return redirect()->route('movil.index', ['tab' => 'conductor'])
             ->with('success', 'Disponibilidad actualizada a: ' . ($user->is_available ? 'Disponible' : 'Ocupado'));
+    }
+
+    public function updateLocation(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'is_available' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $request->user();
+        $user->update([
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
+            'is_available' => $request->has('is_available') ? $validated['is_available'] : $user->is_available,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'latitude' => (float) $user->latitude,
+            'longitude' => (float) $user->longitude,
+            'is_available' => (bool) $user->is_available,
+        ]);
     }
 }

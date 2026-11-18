@@ -324,6 +324,34 @@
 <div class="conductor-main-grid" id="despacho-conductor">
     <!-- Columna Izquierda -->
     <div>
+        <!-- Mapa Interactivo y Telemetría GPS en Vivo del Conductor -->
+        <div class="card" style="margin-bottom: 1rem; padding: 1.1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <div style="font-size: 0.62rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">TELEMETRÍA GPS SATELITAL</div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0;">
+                        Mapa de Navegación en Tiempo Real
+                    </h3>
+                </div>
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <button type="button" id="btnToggleGpsBroadcast" class="btn btn-sm" style="background: #10b981; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;" onclick="toggleGpsBroadcast()">
+                        <i class="bi bi-broadcast-pin"></i> <span id="gpsBroadcastLabel">Activar Transmisión GPS</span>
+                    </button>
+                    <button type="button" class="btn btn-sm" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" onclick="centerConductorMap()" title="Centrar en mi ubicación">
+                        <i class="bi bi-crosshair"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="conductorGpsAlert" style="display: none; padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.73rem; margin-bottom: 0.5rem; font-weight: 600;"></div>
+            <div id="conductorMap" style="width: 100%; height: 270px; border-radius: 10px; border: 1px solid #cbd5e1; z-index: 1;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.72rem; color: #64748b; flex-wrap: wrap; gap: 0.3rem;">
+                <span id="gpsCoordDisplay">GPS Actual: {{ $driver->latitude ? number_format($driver->latitude, 4) . ', ' . number_format($driver->longitude, 4) : '5.3114, -73.8182' }}</span>
+                <span id="gpsLiveBadge" style="display: none; color: #047857; font-weight: 700;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-right:3px;"></span> Transmitiendo posición a la central
+                </span>
+            </div>
+        </div>
+
         <!-- Tarjeta Despacho Exclusivo Asignado (Datos 100% Reales de $activeTrip) -->
         <div class="exclusive-dispatch-card">
             @if($activeTrip)
@@ -661,4 +689,162 @@
         </div>
     </div>
 </div>
+
+<script>
+    const driverInitialLat = {{ $driver->latitude ? (float) $driver->latitude : 5.3114 }};
+    const driverInitialLng = {{ $driver->longitude ? (float) $driver->longitude : -73.8182 }};
+
+    const conductorMap = L.map('conductorMap').setView([driverInitialLat, driverInitialLng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap - Ubaté'
+    }).addTo(conductorMap);
+
+    const taxiIcon = L.divIcon({
+        className: '',
+        html: `<div style="background:#f59e0b;color:#0f172a;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,0.4);font-size:16px;">
+                <i class="bi bi-taxi-front-fill"></i>
+               </div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+    });
+
+    let driverMarker = L.marker([driverInitialLat, driverInitialLng], { icon: taxiIcon }).addTo(conductorMap);
+    driverMarker.bindPopup(`<b>{{ $driver->name }}</b><br>Placa: {{ $driver->vehicle ? $driver->vehicle->license_plate : 'Sin placa' }}<br>Tu taxi`).openPopup();
+
+    @if($activeTrip)
+        const pickupIcon = L.divIcon({
+            className: '',
+            html: '<div style="background:#10b981;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,0.35);">A</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        const dropoffIcon = L.divIcon({
+            className: '',
+            html: '<div style="background:#ef4444;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;font-weight:800;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,0.35);">B</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        const pickupLat = {{ (float) ($activeTrip->origin_latitude ?: 5.3080) }};
+        const pickupLng = {{ (float) ($activeTrip->origin_longitude ?: -73.8150) }};
+        const dropLat = {{ (float) ($activeTrip->destination_latitude ?: 5.3165) }};
+        const dropLng = {{ (float) ($activeTrip->destination_longitude ?: -73.8210) }};
+
+        const markerA = L.marker([pickupLat, pickupLng], { icon: pickupIcon }).addTo(conductorMap);
+        markerA.bindPopup(`<b>Recogida (Pasajero):</b><br>{{ $activeTrip->origin_address }}`);
+
+        const markerB = L.marker([dropLat, dropLng], { icon: dropoffIcon }).addTo(conductorMap);
+        markerB.bindPopup(`<b>Destino:</b><br>{{ $activeTrip->destination_address }}`);
+
+        const tripRoute = L.polyline([[pickupLat, pickupLng], [dropLat, dropLng]], {
+            color: '#ea580c',
+            weight: 4.5,
+            dashArray: '6, 6'
+        }).addTo(conductorMap);
+
+        const group = L.featureGroup([driverMarker, markerA, markerB]);
+        conductorMap.fitBounds(group.getBounds().pad(0.15));
+    @endif
+
+    let isBroadcastingGps = false;
+    let gpsWatchId = null;
+
+    function centerConductorMap() {
+        conductorMap.panTo(driverMarker.getLatLng());
+        conductorMap.setZoom(15);
+    }
+
+    function showConductorNotice(text, bg, color, border) {
+        const el = document.getElementById('conductorGpsAlert');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.background = bg;
+        el.style.color = color;
+        el.style.border = `1px solid ${border}`;
+        el.textContent = text;
+        setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+
+    async function sendGpsToServer(lat, lng) {
+        try {
+            const res = await fetch('{{ route("conductor.location") }}', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    latitude: lat,
+                    longitude: lng
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('gpsCoordDisplay').textContent = `GPS Actual: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            }
+        } catch (e) {}
+    }
+
+    function toggleGpsBroadcast() {
+        const btn = document.getElementById('btnToggleGpsBroadcast');
+        const label = document.getElementById('gpsBroadcastLabel');
+        const badge = document.getElementById('gpsLiveBadge');
+
+        if (!isBroadcastingGps) {
+            if (!navigator.geolocation) {
+                showConductorNotice('Tu navegador no soporta geolocalización satelital.', '#fef2f2', '#b91c1c', '#fecaca');
+                return;
+            }
+
+            label.textContent = 'Iniciando GPS...';
+
+            gpsWatchId = navigator.geolocation.watchPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const acc = Math.round(pos.coords.accuracy || 0);
+
+                    driverMarker.setLatLng([lat, lng]);
+                    conductorMap.panTo([lat, lng]);
+                    sendGpsToServer(lat, lng);
+
+                    isBroadcastingGps = true;
+                    btn.style.background = '#ef4444';
+                    label.textContent = 'Detener Transmisión GPS';
+                    badge.style.display = 'inline-block';
+                    showConductorNotice(`✓ GPS transmitiendo satelitalmente (Precisión: ±${acc}m)`, '#ecfdf5', '#047857', '#a7f3d0');
+                },
+                function(err) {
+                    isBroadcastingGps = false;
+                    btn.style.background = '#10b981';
+                    label.textContent = 'Activar Transmisión GPS';
+                    badge.style.display = 'none';
+                    let msg = 'Error al capturar GPS.';
+                    if (err.code === 1) msg = 'Permiso GPS denegado. Permite la ubicación en el navegador.';
+                    else if (err.code === 2) msg = 'Señal satelital GPS no disponible.';
+                    else if (err.code === 3) msg = 'Tiempo de espera GPS agotado.';
+                    showConductorNotice(msg, '#fffbeb', '#b45309', '#fde68a');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 12000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            if (gpsWatchId !== null) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+            isBroadcastingGps = false;
+            btn.style.background = '#10b981';
+            label.textContent = 'Activar Transmisión GPS';
+            badge.style.display = 'none';
+            showConductorNotice('Transmisión GPS pausada.', '#f1f5f9', '#334155', '#cbd5e1');
+        }
+    }
+</script>
 @endsection
